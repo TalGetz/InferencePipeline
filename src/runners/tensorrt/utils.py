@@ -1,4 +1,5 @@
 import numpy as np
+import tensorrt
 import tensorrt as trt
 from cuda import cuda, cudart
 import ctypes
@@ -65,7 +66,7 @@ class HostDeviceMem:
         cuda_call(cudart.cudaFreeHost(self.host.ctypes.data))
 
 
-def allocate_buffers(engine: trt.ICudaEngine):
+def allocate_buffers(engine: trt.ICudaEngine, max_batch_size=1):
     inputs = []
     outputs = []
     bindings = []
@@ -73,7 +74,7 @@ def allocate_buffers(engine: trt.ICudaEngine):
     tensor_names = [engine.get_tensor_name(i) for i in range(engine.num_io_tensors)]
 
     for binding in tensor_names:
-        size = trt.volume(engine.get_binding_shape(binding)) * engine.max_batch_size
+        size = trt.volume(engine.get_tensor_shape(binding)) * max_batch_size
         dtype = np.dtype(trt.nptype(engine.get_tensor_dtype(binding)))
 
         bindingMemory = HostDeviceMem(size, dtype)
@@ -108,9 +109,9 @@ def _do_inference_base(inputs, outputs, stream, execute_async):
     return [out.host for out in outputs]
 
 
-def do_inference_v2(context, bindings, inputs, outputs, stream):
+def do_inference_v2(context: tensorrt.IExecutionContext, bindings, inputs, outputs, stream):
     def execute_async():
-        context.execute_async_v2(bindings=bindings, stream_handle=stream)
+        context.execute_v2(bindings=bindings)
 
     return _do_inference_base(inputs, outputs, stream, execute_async)
 

@@ -10,8 +10,6 @@ src[:, 0] += 8.0
 
 def align_face_np(img, landmarks):
     landmarks = landmarks.reshape(5, -1)[:, [0, 1]]
-    # landmark = np.array([float(x) for x in landmarks[1:-1]],
-    #                     dtype=np.float32)
     landmark = landmarks.reshape((5, 2))
 
     if landmark.shape[0] == 68:
