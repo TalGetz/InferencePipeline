@@ -1,168 +1,13 @@
 import cv2
-import numpy as np
-import math
 import argparse
+
+import numpy as np
+import tqdm
 
 from src.operations.detection.face_detection.align import align_face_np
 from src.frame_readers.camera_reader import CameraReader
+from src.operations.detection.face_detection.yolov8nface import YOLOv8nFace
 
-
-# Define a class for the YOLOv8 face detection model
-class YOLOv8_face:
-    # Initialize parameters and load the YOLOv8 model
-    def __init__(self, path, conf_thres=0.2, iou_thres=0.5):
-        self.conf_threshold = conf_thres
-        self.iou_threshold = iou_thres
-        self.class_names = ['face']
-        self.num_classes = len(self.class_names)
-        self.net = cv2.dnn.readNet(path)
-        self.input_height = 640
-        self.input_width = 640
-        self.reg_max = 16
-        self.project = np.arange(self.reg_max)
-        self.strides = (8, 16, 32)
-        self.feats_hw = [(math.ceil(self.input_height / self.strides[i]), math.ceil(self.input_width / self.strides[i]))
-                         for i in range(len(self.strides))]
-        self.anchors = self.make_anchors(self.feats_hw)
-
-    # Generate anchors from features
-    def make_anchors(self, feats_hw, grid_cell_offset=0.5):
-        """Generate anchors from features."""
-        anchor_points = {}
-        for i, stride in enumerate(self.strides):
-            h, w = feats_hw[i]
-            x = np.arange(0, w) + grid_cell_offset
-            y = np.arange(0, h) + grid_cell_offset
-            sx, sy = np.meshgrid(x, y)
-            anchor_points[stride] = np.stack((sx, sy), axis=-1).reshape(-1, 2)
-        return anchor_points
-
-    # Perform softmax operation
-    def softmax(self, x, axis=1):
-        x_exp = np.exp(x)
-        x_sum = np.sum(x_exp, axis=axis, keepdims=True)
-        s = x_exp / x_sum
-        return s
-
-    # Perform face detection on the input image
-    def detect(self, srcimg):
-        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(srcimg)
-        self.net.setInput(blob)
-        outputs = self.net.forward(self.net.getUnconnectedOutLayersNames())
-        det_bboxes, det_conf, det_classid, landmarks = self.postprocess(outputs, scale_h, scale_w, pad_h, pad_w)
-        return det_bboxes, det_conf, det_classid, landmarks
-
-    def resize_image(self, srcimg, keep_ratio=True):
-        pad_top, pad_left, new_h, new_w = 0, 0, self.input_width, self.input_height
-        if keep_ratio and srcimg.shape[0] != srcimg.shape[1]:
-            hw_scale = srcimg.shape[0] / srcimg.shape[1]
-            if hw_scale > 1:
-                new_h, new_w = self.input_height, int(self.input_width / hw_scale)
-                img = cv2.resize(srcimg, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                pad_left = int((self.input_width - new_w) * 0.5)
-                img = cv2.copyMakeBorder(img, 0, 0, pad_left, self.input_width - new_w - pad_left, cv2.BORDER_CONSTANT,
-                                         value=(0, 0, 0))
-            else:
-                new_h, new_w = int(self.input_height * hw_scale), self.input_width
-                img = cv2.resize(srcimg, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                pad_top = int((self.input_height - new_h) * 0.5)
-                img = cv2.copyMakeBorder(img, pad_top, self.input_height - new_h - pad_top, 0, 0, cv2.BORDER_CONSTANT,
-                                         value=(0, 0, 0))
-        else:
-            img = cv2.resize(srcimg, (self.input_width, self.input_height), interpolation=cv2.INTER_AREA)
-        return img, new_h, new_w, pad_top, pad_left
-
-    def preprocess(self, srcimg):
-        input_img, newh, neww, pad_h, pad_w = self.resize_image(cv2.cvtColor(srcimg, cv2.COLOR_BGR2RGB))
-        scale_h, scale_w = srcimg.shape[0] / newh, srcimg.shape[1] / neww
-        input_img = input_img.astype(np.float32) / 255.0
-        blob = input_img.transpose(2, 0, 1)
-        blob = np.expand_dims(blob, 0)
-        return blob, pad_h, pad_w, scale_h, scale_w
-
-    # Handle post-processing of the model's output
-    def postprocess(self, preds, scale_h, scale_w, pad_h, pad_w):
-        bboxes, scores, landmarks = [], [], []
-        for i, pred in enumerate(preds):
-            stride = int(self.input_height / pred.shape[2])
-            pred = pred.transpose((0, 2, 3, 1))
-
-            box = pred[..., :self.reg_max * 4]
-            cls = 1 / (1 + np.exp(-pred[..., self.reg_max * 4:-15])).reshape((-1, 1))
-            kpts = pred[..., -15:].reshape((-1, 15))
-            tmp = box.reshape(-1, 4, self.reg_max)
-            bbox_pred = self.softmax(tmp, axis=-1)
-            bbox_pred = np.dot(bbox_pred, self.project).reshape((-1, 4))
-
-            bbox = self.distance2bbox(self.anchors[stride], bbox_pred,
-                                      max_shape=(self.input_height, self.input_width)) * stride
-            kpts[:, 0::3] = (kpts[:, 0::3] * 2.0 + (self.anchors[stride][:, 0].reshape((-1, 1)) - 0.5)) * stride
-            kpts[:, 1::3] = (kpts[:, 1::3] * 2.0 + (self.anchors[stride][:, 1].reshape((-1, 1)) - 0.5)) * stride
-            kpts[:, 2::3] = 1 / (1 + np.exp(-kpts[:, 2::3]))
-
-            bbox -= np.array([[pad_w, pad_h, pad_w, pad_h]])
-            bbox *= np.array([[scale_w, scale_h, scale_w, scale_h]])
-            kpts -= np.tile(np.array([pad_w, pad_h, 0]), 5).reshape((1, 15))
-            kpts *= np.tile(np.array([scale_w, scale_h, 1]), 5).reshape((1, 15))
-
-            bboxes.append(bbox)
-            scores.append(cls)
-            landmarks.append(kpts)
-
-        bboxes = np.concatenate(bboxes, axis=0)
-        scores = np.concatenate(scores, axis=0)
-        landmarks = np.concatenate(landmarks, axis=0)
-
-        bboxes_wh = bboxes.copy()
-        bboxes_wh[:, 2:4] = bboxes[:, 2:4] - bboxes[:, 0:2]
-        classIds = np.argmax(scores, axis=1)
-        confidences = np.max(scores, axis=1)
-
-        mask = confidences > self.conf_threshold
-        bboxes_wh = bboxes_wh[mask]
-        confidences = confidences[mask]
-        classIds = classIds[mask]
-        landmarks = landmarks[mask]
-
-        indices = cv2.dnn.NMSBoxes(bboxes_wh.tolist(), confidences.tolist(), self.conf_threshold,
-                                   self.iou_threshold)
-
-        if len(indices) > 0:
-            indices = indices.flatten()
-            mlvl_bboxes = bboxes_wh[indices]
-            confidences = confidences[indices]
-            classIds = classIds[indices]
-            landmarks = landmarks[indices]
-            return mlvl_bboxes, confidences, classIds, landmarks
-        else:
-            return np.array([]), np.array([]), np.array([]), np.array([])
-
-    # Calculate bounding box coordinates from points and distances
-    def distance2bbox(self, points, distance, max_shape=None):
-        x1 = points[:, 0] - distance[:, 0]
-        y1 = points[:, 1] - distance[:, 1]
-        x2 = points[:, 0] + distance[:, 2]
-        y2 = points[:, 1] + distance[:, 3]
-        if max_shape is not None:
-            x1 = np.clip(x1, 0, max_shape[1])
-            y1 = np.clip(y1, 0, max_shape[0])
-            x2 = np.clip(x2, 0, max_shape[1])
-            y2 = np.clip(y2, 0, max_shape[0])
-        return np.stack([x1, y1, x2, y2], axis=-1)
-
-    # Visualize the detected faces with bounding boxes and landmarks
-    def draw_detections(self, image, boxes, scores, kpts):
-        for box, score, kp in zip(boxes, scores, kpts):
-            x, y, w, h = box.astype(int)
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), thickness=3)
-            cv2.putText(image, "face:" + str(round(score, 2)), (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255),
-                        thickness=2)
-            for i in range(5):
-                cv2.circle(image, (int(kp[i * 3]), int(kp[i * 3 + 1])), 4, (0, 255, 0), thickness=-1)
-        return image
-
-
-# Main part of the script
 if __name__ == '__main__':
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
@@ -174,23 +19,26 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Initialize the YOLOv8_face detector
-    YOLOv8_face_detector = YOLOv8_face(args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold)
-    srcimg = cv2.imread(args.imgpath)
+    YOLOv8_face_detector = YOLOv8nFace(args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold)
+
     camera = CameraReader()
-    srcimg = camera.get()
-    while srcimg is None:
-        srcimg = camera.get()
+    frame = camera.get()
+    for frame in tqdm.tqdm(camera):
+        boxes, scores, classids, kpts = YOLOv8_face_detector.detect(frame)
 
-    # Perform face detection on the input image
-    boxes, scores, classids, kpts = YOLOv8_face_detector.detect(srcimg)
+        # frame = YOLOv8_face_detector.draw_detections(frame, boxes, scores, kpts)
 
-    # Draw bounding boxes and keypoints on the detected faces
-    # dstimg = YOLOv8_face_detector.draw_detections(srcimg, boxes, scores, kpts)
+        stacked_images = []
+        for kpt in kpts:
+            dstimg = align_face_np(frame, kpt)
+            dstimg = cv2.resize(dstimg, (400, 400))
+            stacked_images.append(dstimg)
 
-    for kpt in kpts:
-        dstimg = align_face_np(srcimg, kpt)
-        winName = 'Deep learning face detection'
-        cv2.namedWindow(winName, 0)
-        cv2.imshow(winName, dstimg)
-        cv2.waitKey(0)
+        if stacked_images:
+            wide_image = np.hstack(stacked_images)  # Stack images horizontally
+            cv2.imshow('Wide Image', wide_image)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
     cv2.destroyAllWindows()

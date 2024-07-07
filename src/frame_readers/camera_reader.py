@@ -8,6 +8,12 @@ class CameraReader:
         if not self.cap.isOpened():
             raise ValueError(f"Camera with index {camera_index} cannot be opened.")
 
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.get()
+
     def get(self):
         ret, frame = self.cap.read()
         if not ret:
