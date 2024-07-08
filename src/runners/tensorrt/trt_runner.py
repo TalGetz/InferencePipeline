@@ -12,7 +12,7 @@ class TrtRunner:
         self.inputs, self.outputs, self.bindings, self.stream = allocate_buffers(self.engine)
 
     def infer(self, x: List[np.ndarray], copy_outputs=True):
-        [np.copyto(inp.host, x.flatten()) for inp in self.inputs]
+        [np.copyto(inp.host, x_i.flatten()) for inp, x_i in zip(self.inputs, x)]
 
         outputs = do_inference_v2(self.context, self.bindings, self.inputs, self.outputs, self.stream)
 

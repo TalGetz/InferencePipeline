@@ -2,43 +2,51 @@ import cv2
 import numpy as np
 import math
 
+from src.models.base_model import BaseModel
 from src.utils import softmax
 
 
-class YOLOv8nFace:
-    def __init__(self, path, conf_thres, iou_thres):
-        self.conf_threshold = conf_thres
-        self.iou_threshold = iou_thres
-        self.class_names = ['face']
-        self.num_classes = len(self.class_names)
-        self.net = cv2.dnn.readNet(path)
+class YOLOv8nFace(BaseModel):
+    def __init__(self, runner, conf_threshold, iou_threshold):
+        self.conf_threshold = conf_threshold
+        self.iou_threshold = iou_threshold
         self.input_height = 640
         self.input_width = 640
         self.reg_max = 16
         self.project = np.arange(self.reg_max)
         self.strides = (8, 16, 32)
-        self.feats_hw = [(math.ceil(self.input_height / self.strides[i]), math.ceil(self.input_width / self.strides[i]))
-                         for i in range(len(self.strides))]
+        self.feats_hw = [
+            (
+                math.ceil(self.input_height / stride),
+                math.ceil(self.input_width / stride)
+            ) for stride in self.strides]
         self.anchors = self._make_anchors(self.feats_hw)
+        super().__init__(runner,
+                         output_shapes=[
+                             (1, 80, 80, 80),
+                             (1, 80, 40, 40),
+                             (1, 80, 20, 20),
+                         ]
+                         )
 
-    def detect(self, srcimg):
-        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(srcimg)
-        self.net.setInput(blob)
-        outputs = self.net.forward(self.net.getUnconnectedOutLayersNames())
+    def detect(self, frame):
+        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
+        outputs = self.infer([blob])
+        outputs = [outputs[1], outputs[2], outputs[0]]
         det_bboxes, det_conf, det_classid, landmarks = self.postprocess(outputs, scale_h, scale_w, pad_h, pad_w)
         return det_bboxes, det_conf, det_classid, landmarks
 
-    def preprocess(self, srcimg):
-        input_img, newh, neww, pad_h, pad_w = self._resize_image(cv2.cvtColor(srcimg, cv2.COLOR_BGR2RGB))
-        scale_h, scale_w = srcimg.shape[0] / newh, srcimg.shape[1] / neww
+    def preprocess(self, frame):
+        input_img, newh, neww, pad_h, pad_w = self._resize_image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        scale_h, scale_w = frame.shape[0] / newh, frame.shape[1] / neww
         input_img = input_img.astype(np.float32) / 255.0
         blob = input_img.transpose(2, 0, 1)
         blob = np.expand_dims(blob, 0)
         return blob, pad_h, pad_w, scale_h, scale_w
 
-    def postprocess(self, preds, scale_h, scale_w, pad_h, pad_w):
+    def postprocess(self, predictions, scale_h, scale_w, pad_h, pad_w):
         bboxes, scores, landmarks = [], [], []
-        for i, pred in enumerate(preds):
+        for i, pred in enumerate(predictions):
             stride = int(self.input_height / pred.shape[2])
             pred = pred.transpose((0, 2, 3, 1))
 
@@ -134,13 +142,3 @@ class YOLOv8nFace:
         else:
             img = cv2.resize(srcimg, (self.input_width, self.input_height), interpolation=cv2.INTER_AREA)
         return img, new_h, new_w, pad_top, pad_left
-
-    def draw_detections(self, image, boxes, scores, kpts):
-        for box, score, kp in zip(boxes, scores, kpts):
-            x, y, w, h = box.astype(int)
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), thickness=3)
-            cv2.putText(image, "face:" + str(round(score, 2)), (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255),
-                        thickness=2)
-            for i in range(5):
-                cv2.circle(image, (int(kp[i * 3]), int(kp[i * 3 + 1])), 4, (0, 255, 0), thickness=-1)
-        return image
