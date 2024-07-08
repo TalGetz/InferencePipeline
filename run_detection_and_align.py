@@ -1,17 +1,24 @@
-import cv2
 import argparse
 
+import cv2
 import numpy as np
 import tqdm
 
-from src.models.detection.face_detection.align import align_face_np
 from src.frame_readers.camera_reader import CameraReader
-from src.models.detection.face_detection.yolov8nface import YOLOv8nFace
+from src.models.detection.face_detection.yolov8nface.item import Item
+from src.models.detection.face_detection.yolov8nface.model import YOLOv8nFaceModel
+from src.models.detection.face_detection.yolov8nface.postprocess import YOLOv8nFacePostprocess
+from src.models.detection.face_detection.yolov8nface.preprocess import YOLOv8nFacePreprocess
 from src.runners.tensorrt.trt_runner import TrtRunner
+from src.utils.align import align_face_np
+
+
+def pipe(x, pre, mod, post):
+    return post.infer(mod.infer(pre.infer(Item(x))))
 
 
 def get_faces(detector, x):
-    boxes, scores, classids, kpts = detector.detect(x)
+    boxes, scores, classids, kpts = detector(x)
     faces = []
     for kpt, box in zip(kpts, boxes):
         dstimg = align_face_np(x, kpt)
@@ -31,8 +38,13 @@ def main():
     args = parser.parse_args()
 
     # Initialize the YOLOv8_face detector
-    YOLOv8_face_detector = YOLOv8nFace(TrtRunner(args.modelpath), conf_threshold=args.confThreshold,
-                                       iou_threshold=args.nmsThreshold)
+
+    YOLOv8_model = YOLOv8nFaceModel(0, 1, TrtRunner(args.modelpath))
+    YOLOv8_preprocess = YOLOv8nFacePreprocess(0, 1)
+    YOLOv8_postprocess = YOLOv8nFacePostprocess(0, 1,
+                                                conf_threshold=args.confThreshold,
+                                                iou_threshold=args.nmsThreshold)
+    YOLOv8_face_detector = lambda x: pipe(x, YOLOv8_preprocess, YOLOv8_model, YOLOv8_postprocess)
     embedder = TrtRunner("weights/arcfaceresnet100-8.trt")
     tal = cv2.imread("data/face_images/tal.png")
     geva = cv2.imread("data/face_images/geva.png")

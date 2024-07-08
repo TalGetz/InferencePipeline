@@ -1,13 +1,15 @@
-import cv2
-import numpy as np
 import math
 
-from src.models.base_model import BaseModel
-from src.utils import softmax
+import cv2
+import numpy as np
+
+from src.processes.t_process import TProcess
+from src.utils.softmax import softmax
 
 
-class YOLOv8nFace(BaseModel):
-    def __init__(self, runner, conf_threshold, iou_threshold):
+class YOLOv8nFacePostprocess(TProcess):
+    def __init__(self, input_queue, output_queue_capacity, conf_threshold, iou_threshold):
+        super().__init__(input_queue, output_queue_capacity)
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold
         self.input_height = 640
@@ -21,28 +23,9 @@ class YOLOv8nFace(BaseModel):
                 math.ceil(self.input_width / stride)
             ) for stride in self.strides]
         self.anchors = self._make_anchors(self.feats_hw)
-        super().__init__(runner,
-                         output_shapes=[
-                             (1, 80, 80, 80),
-                             (1, 80, 40, 40),
-                             (1, 80, 20, 20),
-                         ]
-                         )
 
-    def detect(self, frame):
-        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
-        outputs = self.infer([blob])
-        outputs = [outputs[1], outputs[2], outputs[0]]
-        det_bboxes, det_conf, det_classid, landmarks = self.postprocess(outputs, scale_h, scale_w, pad_h, pad_w)
-        return det_bboxes, det_conf, det_classid, landmarks
-
-    def preprocess(self, frame):
-        input_img, newh, neww, pad_h, pad_w = self._resize_image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        scale_h, scale_w = frame.shape[0] / newh, frame.shape[1] / neww
-        input_img = input_img.astype(np.float32) / 255.0
-        blob = input_img.transpose(2, 0, 1)
-        blob = np.expand_dims(blob, 0)
-        return blob, pad_h, pad_w, scale_h, scale_w
+    def infer(self, item):
+        return self.postprocess(item.outputs, item.scale_h, item.scale_w, item.pad_h, item.pad_w)
 
     def postprocess(self, predictions, scale_h, scale_w, pad_h, pad_w):
         bboxes, scores, landmarks = [], [], []
@@ -122,23 +105,3 @@ class YOLOv8nFace(BaseModel):
             sx, sy = np.meshgrid(x, y)
             anchor_points[stride] = np.stack((sx, sy), axis=-1).reshape(-1, 2)
         return anchor_points
-
-    def _resize_image(self, srcimg, keep_ratio=True):
-        pad_top, pad_left, new_h, new_w = 0, 0, self.input_width, self.input_height
-        if keep_ratio and srcimg.shape[0] != srcimg.shape[1]:
-            hw_scale = srcimg.shape[0] / srcimg.shape[1]
-            if hw_scale > 1:
-                new_h, new_w = self.input_height, int(self.input_width / hw_scale)
-                img = cv2.resize(srcimg, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                pad_left = int((self.input_width - new_w) * 0.5)
-                img = cv2.copyMakeBorder(img, 0, 0, pad_left, self.input_width - new_w - pad_left, cv2.BORDER_CONSTANT,
-                                         value=(0, 0, 0))
-            else:
-                new_h, new_w = int(self.input_height * hw_scale), self.input_width
-                img = cv2.resize(srcimg, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                pad_top = int((self.input_height - new_h) * 0.5)
-                img = cv2.copyMakeBorder(img, pad_top, self.input_height - new_h - pad_top, 0, 0, cv2.BORDER_CONSTANT,
-                                         value=(0, 0, 0))
-        else:
-            img = cv2.resize(srcimg, (self.input_width, self.input_height), interpolation=cv2.INTER_AREA)
-        return img, new_h, new_w, pad_top, pad_left
