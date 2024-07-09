@@ -10,7 +10,7 @@ class TProcess(abc.ABC):
         self._output_queue: Queue = Queue(output_queue_capacity)
         self._is_initiated = False
 
-    def repeatable_init_in_process(self):
+    def _repeatable_init_in_process(self):
         if not self._is_initiated:
             self.init_in_process()
             self._is_initiated = True
@@ -19,7 +19,7 @@ class TProcess(abc.ABC):
         pass
 
     def process_loop(self):
-        self.repeatable_init_in_process()
+        self._repeatable_init_in_process()
         while True:
             input = self._input_queue.get()
             output = self.infer(input)
@@ -34,6 +34,10 @@ class TProcess(abc.ABC):
     @property
     def output_queue(self):
         return self._output_queue
+
+    def _infer(self, item):
+        self._repeatable_init_in_process()
+        return self.infer(item)
 
     @abc.abstractmethod
     def infer(self, item):

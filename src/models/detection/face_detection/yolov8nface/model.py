@@ -1,5 +1,3 @@
-import time
-
 from src.models.base_model import BaseModel
 from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.processes.t_process import TProcess
@@ -19,7 +17,6 @@ class YOLOv8nFaceModel(TProcess):
         ])
 
     def infer(self, item: YOLOv8nFaceItem):
-        self.repeatable_init_in_process()
         outputs = self.model.infer([item.blob])
         outputs = [outputs[1], outputs[2], outputs[0]]
         item.outputs = outputs
