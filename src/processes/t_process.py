@@ -8,12 +8,18 @@ class TProcess(abc.ABC):
         self.process = multiprocessing.Process(target=self.process_loop)
         self._input_queue: Queue = input_queue
         self._output_queue: Queue = Queue(output_queue_capacity)
+        self._is_initiated = False
+
+    def repeatable_init_in_process(self):
+        if not self._is_initiated:
+            self.init_in_process()
+            self._is_initiated = True
 
     def init_in_process(self):
         pass
 
     def process_loop(self):
-        self.init_in_process()
+        self.repeatable_init_in_process()
         while True:
             input = self._input_queue.get()
             output = self.infer(input)

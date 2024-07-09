@@ -12,14 +12,14 @@ class YOLOv8nFaceModel(TProcess):
         self.model = None
 
     def init_in_process(self):
-        if self.model is not None:
-            self.model = BaseModel(self.model_path, output_shapes=[
-                (1, 80, 80, 80),
-                (1, 80, 40, 40),
-                (1, 80, 20, 20),
-            ])
+        self.model = BaseModel(self.model_path, output_shapes=[
+            (1, 80, 80, 80),
+            (1, 80, 40, 40),
+            (1, 80, 20, 20),
+        ])
 
     def infer(self, item: YOLOv8nFaceItem):
+        self.repeatable_init_in_process()
         outputs = self.model.infer([item.blob])
         outputs = [outputs[1], outputs[2], outputs[0]]
         item.outputs = outputs
