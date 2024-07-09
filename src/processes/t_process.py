@@ -35,10 +35,10 @@ class TProcess(abc.ABC):
     def output_queue(self):
         return self._output_queue
 
-    def _infer(self, item):
+    def infer(self, item):
         self._repeatable_init_in_process()
-        return self.infer(item)
+        return self.overridable_infer(item)
 
     @abc.abstractmethod
-    def infer(self, item):
+    def overridable_infer(self, item):
         raise NotImplementedError()

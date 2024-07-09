@@ -16,8 +16,8 @@ class CameraReader:
 
     def get(self):
         ret, frame = self.cap.read()
-        if not ret:
-            return None
+        while not ret:
+            ret, frame = self.cap.read()
         return frame
 
     def release(self):

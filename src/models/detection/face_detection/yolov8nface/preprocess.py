@@ -11,7 +11,7 @@ class YOLOv8nFacePreprocess(TProcess):
         self.input_width = 640
         super().__init__(input_queue, output_queue_capacity)
 
-    def infer(self, frame: np.ndarray):
+    def overridable_infer(self, frame: np.ndarray):
         blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
         item = YOLOv8nFaceItem(frame)
         item.blob = blob

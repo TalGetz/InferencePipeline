@@ -24,7 +24,7 @@ class YOLOv8nFacePostprocess(TProcess):
             ) for stride in self.strides]
         self.anchors = self._make_anchors(self.feats_hw)
 
-    def infer(self, item):
+    def overridable_infer(self, item):
         mlvl_bboxes, confidences, classIds, landmarks = self.postprocess(item.outputs, item.scale_h, item.scale_w,
                                                                          item.pad_h, item.pad_w)
         item.det_bboxes = mlvl_bboxes
