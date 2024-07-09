@@ -33,10 +33,9 @@ def main():
 
     # Initialize the YOLOv8_face detector
 
-    camera_reader_process = CameraReaderProcess()
-    camera_reader_process.start()
+    camera_reader_process = CameraReaderProcess().start()
     yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, 1, args.modelpath, conf_threshold=args.confThreshold,
-                              iou_threshold=args.nmsThreshold)
+                              iou_threshold=args.nmsThreshold).start()
 
     embedder = TrtRunner("weights/arcfaceresnet100-8.trt")
     tal = cv2.imread("data/face_images/tal.png")

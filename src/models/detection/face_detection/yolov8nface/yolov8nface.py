@@ -12,9 +12,11 @@ class YOLOv8nFace:
                                                   iou_threshold)
         self.output_queue = self.postprocess.output_queue
 
+    def start(self):
         self.preprocess.start()
         self.model.start()
         self.postprocess.start()
+        return self
 
     def __iter__(self):
         return self

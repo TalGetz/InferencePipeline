@@ -27,6 +27,7 @@ class TProcess(abc.ABC):
 
     def start(self):
         self.process.start()
+        return self
 
     def join(self):
         self.process.join()
