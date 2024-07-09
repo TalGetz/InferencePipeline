@@ -23,4 +23,7 @@ class YOLOv8nFace:
         return self.output_queue.get()
 
     def infer_synchronous(self, x):
+        self.preprocess.init_in_process()
+        self.model.init_in_process()
+        self.postprocess.init_in_process()
         return self.postprocess.infer(self.model.infer(self.preprocess.infer(x)))
