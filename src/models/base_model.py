@@ -1,6 +1,9 @@
+from src.runners.runner import Runner
+
+
 class BaseModel:
-    def __init__(self, runner, output_shapes):
-        self.runner = runner
+    def __init__(self, model_path, output_shapes):
+        self.runner = Runner(model_path)
         self.output_shapes = output_shapes
 
     def infer(self, x, copy_outputs=True):

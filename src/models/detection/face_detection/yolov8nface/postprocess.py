@@ -25,7 +25,13 @@ class YOLOv8nFacePostprocess(TProcess):
         self.anchors = self._make_anchors(self.feats_hw)
 
     def infer(self, item):
-        return self.postprocess(item.outputs, item.scale_h, item.scale_w, item.pad_h, item.pad_w)
+        mlvl_bboxes, confidences, classIds, landmarks = self.postprocess(item.outputs, item.scale_h, item.scale_w,
+                                                                         item.pad_h, item.pad_w)
+        item.det_bboxes = mlvl_bboxes
+        item.det_conf = confidences
+        item.det_classid = classIds
+        item.landmarks = landmarks
+        return item
 
     def postprocess(self, predictions, scale_h, scale_w, pad_h, pad_w):
         bboxes, scores, landmarks = [], [], []

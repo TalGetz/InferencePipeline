@@ -5,7 +5,7 @@ import numpy as np
 
 
 @dataclass
-class Item:
+class YOLOv8nFaceItem:
     frame: np.ndarray
 
     blob: np.ndarray = None

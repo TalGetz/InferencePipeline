@@ -6,11 +6,11 @@ from src.runners.tensorrt.trt_runner import TrtRunner
 class Runner:
     def __init__(self, model_path):
         extension = Path(model_path).suffix
-        if extension == "trt":
+        if extension == ".trt":
             self.runner = TrtRunner(model_path)
-        elif extension == "onnx":
+        elif extension == ".onnx":
             raise NotImplementedError()
-        elif extension == "pt":
+        elif extension == ".pt":
             raise NotImplementedError()
         else:
             raise NotImplementedError()

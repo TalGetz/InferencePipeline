@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from src.models.detection.face_detection.yolov8nface.item import Item
+from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.processes.t_process import TProcess
 
 
@@ -11,8 +11,9 @@ class YOLOv8nFacePreprocess(TProcess):
         self.input_width = 640
         super().__init__(input_queue, output_queue_capacity)
 
-    def infer(self, item: Item):
-        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(item.frame)
+    def infer(self, frame: np.ndarray):
+        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
+        item = YOLOv8nFaceItem(frame)
         item.blob = blob
         item.pad_h = pad_h
         item.pad_w = pad_w
