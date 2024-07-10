@@ -11,4 +11,4 @@ class CameraReaderProcess(TProcess):
         self._input_queue = CameraReader(self.camera_index)
 
     def overridable_infer(self, x):
-        return x
+        return [x]

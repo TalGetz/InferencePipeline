@@ -19,7 +19,7 @@ class ArcFaceResnet100Model(TProcess):
     def overridable_infer(self, item):
         embeddings = []
         for aligned_face in item.aligned_face_batch:
-            embedding = self.model.infer([aligned_face])
+            [embedding] = self.model.infer([aligned_face])
             embeddings.append(embedding)
 
         if len(embeddings) > 0:

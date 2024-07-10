@@ -20,13 +20,13 @@ class ArcFaceResnet100Preprocess(TProcess):
 
     def overridable_infer(self, item):
         if isinstance(item, YOLOv8nFaceItem):
-            new_item = ArcFaceResnet100Item(item.frame, item.landmarks)
+            new_item = ArcFaceResnet100Item(item.frame, item.landmarks, item.det_bboxes)
         elif isinstance(item, ArcFaceResnet100Item):
-            new_item = ArcFaceResnet100Item(item.frame, item.landmarks_batch)
+            new_item = ArcFaceResnet100Item(item.frame, item.landmarks_batch, item.bbox_batch)
         else:
             raise NotImplementedError()
         new_item.aligned_face_batch = np.array(
-            [self.align_face_np(new_item.frame, landmarks) for landmarks in new_item.landmarks_batch]
+            [self.align_face_np(new_item.frame, landmarks).transpose(2,0,1) for landmarks in new_item.landmarks_batch]
         )
         return [new_item]
 
