@@ -20,4 +20,4 @@ class YOLOv8nFaceModel(TProcess):
         outputs = self.model.infer([item.blob])
         outputs = [outputs[1], outputs[2], outputs[0]]
         item.outputs = outputs
-        return item
+        return [item]

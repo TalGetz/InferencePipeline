@@ -2,7 +2,6 @@ import abc
 import multiprocessing
 from multiprocessing import Queue
 
-
 class TProcess(abc.ABC):
     def __init__(self, input_queue, output_queue_capacity):
         self.process = multiprocessing.Process(target=self.process_loop)
@@ -22,8 +21,9 @@ class TProcess(abc.ABC):
         self._repeatable_init_in_process()
         while True:
             input = self._input_queue.get()
-            output = self.infer(input)
-            self._output_queue.put(output)
+            outputs = self.infer(input)
+            for output in outputs:
+                self._output_queue.put(output)
 
     def start(self):
         self.process.start()

@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import cv2
 import numpy as np
@@ -7,7 +8,8 @@ import tqdm
 from src.frame_readers.camera_reader_process import CameraReaderProcess
 from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.models.detection.face_detection.yolov8nface.yolov8nface import YOLOv8nFace
-from src.runners.tensorrt.trt_runner import TrtRunner
+from src.models.recognition.face_recognition.arcfaceresnet100.arcfaceresnet100 import ArcFaceResnet100
+from src.models.recognition.face_recognition.arcfaceresnet100.target import ArcFaceResnet100Target
 from src.utils.align import align_face_np
 
 
@@ -34,18 +36,35 @@ def main():
     # Initialize the YOLOv8_face detector
 
     camera_reader_process = CameraReaderProcess().start()
+    yolov8nface_main_thread = YOLOv8nFace(0, 1, args.modelpath, conf_threshold=args.confThreshold,
+                                          iou_threshold=args.nmsThreshold)
+
+    target_names = ["tal", "geva"]
+    target_images = [cv2.imread(f"data/face_images/{name}.png") for name in target_names]
+    targets = [
+        ArcFaceResnet100Target(
+            image,
+            yolov8nface_main_thread.infer_synchronous(image).landmarks,
+            name=name
+        )
+        for name, image in zip(target_names, target_images)
+    ]
+    arcfaceresnet100_main_thread = ArcFaceResnet100(0, 1,
+                                                    "weights/arcfaceresnet100-8.trt", targets, 0.3)
+    for target in targets:
+        target.face_embedding_batch = arcfaceresnet100_main_thread.infer_synchronous(target,
+                                                                                     get_only_embedding=True).face_embedding_batch
+
     yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, 1, args.modelpath, conf_threshold=args.confThreshold,
                               iou_threshold=args.nmsThreshold).start()
+    arcfaceresnet100 = ArcFaceResnet100(yolov8nface.output_queue, 1,
+                                        "weights/arcfaceresnet100-8.trt", targets, 0.3).start()
 
-    embedder = TrtRunner("weights/arcfaceresnet100-8.trt")
-    tal = cv2.imread("data/face_images/tal.png")
-    geva = cv2.imread("data/face_images/geva.png")
-    targets = {
-        "tal": embedder.infer([get_faces(yolov8nface.infer_synchronous(tal))[0][0]])[0],
-        "geva": embedder.infer([get_faces(yolov8nface.infer_synchronous(geva))[0][0]])[0],
-    }
+    time.sleep(1)
+    for item in tqdm.tqdm(arcfaceresnet100):
+        print(item)
+        continue
 
-    for item in tqdm.tqdm(yolov8nface):
         aligned_faces = get_faces(item)
         stacked_images = []
         for face, middle in aligned_faces:

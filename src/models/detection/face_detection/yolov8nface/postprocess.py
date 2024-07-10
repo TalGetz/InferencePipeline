@@ -31,7 +31,7 @@ class YOLOv8nFacePostprocess(TProcess):
         item.det_conf = confidences
         item.det_classid = classIds
         item.landmarks = landmarks
-        return item
+        return [item]
 
     def postprocess(self, predictions, scale_h, scale_w, pad_h, pad_w):
         bboxes, scores, landmarks = [], [], []

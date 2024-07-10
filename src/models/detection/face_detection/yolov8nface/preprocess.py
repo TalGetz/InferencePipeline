@@ -19,7 +19,7 @@ class YOLOv8nFacePreprocess(TProcess):
         item.pad_w = pad_w
         item.scale_h = scale_h
         item.scale_w = scale_w
-        return item
+        return [item]
 
     def preprocess(self, frame):
         input_img, newh, neww, pad_h, pad_w = self._resize_image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
