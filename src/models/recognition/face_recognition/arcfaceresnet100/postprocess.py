@@ -5,8 +5,8 @@ from src.processes.t_process import TProcess
 
 
 class ArcFaceResnet100Postprocess(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, targets, face_recognition_threshold):
-        super().__init__(input_queue, output_queue_capacity)
+    def __init__(self, input_queue, output_queue_capacity, targets, face_recognition_threshold, kill_flag=None):
+        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
         self.targets = targets
         if len(self.targets) > 0 and self.targets[0].face_embedding_batch is not None:
             self.target_embeddings = np.stack([t.face_embedding_batch[0] for t in self.targets]) if len(

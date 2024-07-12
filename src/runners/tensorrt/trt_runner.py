@@ -22,4 +22,6 @@ class TrtRunner:
             return outputs
 
     def __del__(self):
-        free_buffers(self.inputs, self.outputs, self.stream)
+        # TODO: free memory correctly
+        # free_buffers(self.inputs, self.outputs, self.stream)
+        pass

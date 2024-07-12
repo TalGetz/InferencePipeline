@@ -1,13 +1,12 @@
 import numpy as np
 
 from src.models.base_model import BaseModel
-from src.models.recognition.face_recognition.arcfaceresnet100.item import ArcFaceResnet100Item
 from src.processes.t_process import TProcess
 
 
 class ArcFaceResnet100Model(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, model_path):
-        super().__init__(input_queue, output_queue_capacity)
+    def __init__(self, input_queue, output_queue_capacity, model_path, kill_flag=None):
+        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
         self.model_path = model_path
         self.model: BaseModel = None
 

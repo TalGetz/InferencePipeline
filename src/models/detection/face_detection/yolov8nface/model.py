@@ -4,8 +4,8 @@ from src.processes.t_process import TProcess
 
 
 class YOLOv8nFaceModel(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, model_path):
-        super().__init__(input_queue, output_queue_capacity)
+    def __init__(self, input_queue, output_queue_capacity, model_path, kill_flag=None):
+        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
         self.model_path = model_path
         self.model: BaseModel = None
 

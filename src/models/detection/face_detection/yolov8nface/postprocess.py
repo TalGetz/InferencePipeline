@@ -8,8 +8,8 @@ from src.utils.softmax import softmax
 
 
 class YOLOv8nFacePostprocess(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, conf_threshold, iou_threshold):
-        super().__init__(input_queue, output_queue_capacity)
+    def __init__(self, input_queue, output_queue_capacity, conf_threshold, iou_threshold, kill_flag=None):
+        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold
         self.input_height = 640

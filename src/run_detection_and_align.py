@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 import time
 
 import cv2
@@ -25,6 +26,18 @@ def get_faces(item: YOLOv8nFaceItem):
 
 
 def main():
+    kill_flag = multiprocessing.Event()
+    try:
+        run(kill_flag)
+    except:
+        pass
+
+    kill_flag.set()
+    print("Waiting for processes to finish...")
+    time.sleep(3)
+
+
+def run(kill_flag):
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--imgpath', type=str, default='face.jpeg', help="image path")
@@ -34,7 +47,7 @@ def main():
     parser.add_argument('--nmsThreshold', default=0.5, type=float, help='nms iou thresh')
     args = parser.parse_args()
 
-    camera_reader_process = CameraReaderProcess().start()
+    camera_reader_process = CameraReaderProcess(kill_flag=kill_flag).start()
     yolov8nface_main_thread = YOLOv8nFace(0, 1, args.modelpath, conf_threshold=args.confThreshold,
                                           iou_threshold=args.nmsThreshold)
 
@@ -59,9 +72,10 @@ def main():
         target.face_embedding_batch = tmp_target.face_embedding_batch
 
     yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, 1, args.modelpath, conf_threshold=args.confThreshold,
-                              iou_threshold=args.nmsThreshold).start()
+                              iou_threshold=args.nmsThreshold, kill_flag=kill_flag).start()
     arcfaceresnet100 = ArcFaceResnet100(yolov8nface.output_queue, 1,
-                                        "weights/arcfaceresnet100-8.trt", targets, 0.45).start()
+                                        "weights/arcfaceresnet100-8.trt", targets, 0.45,
+                                        kill_flag=kill_flag).start()
 
     for item in tqdm.tqdm(arcfaceresnet100):
         item: ArcFaceResnet100Item = item

@@ -4,12 +4,13 @@ from src.models.recognition.face_recognition.arcfaceresnet100.preprocess import 
 
 
 class ArcFaceResnet100:
-    def __init__(self, input_queue, queue_capacity, model_path, targets, face_recognition_threshold):
+    def __init__(self, input_queue, queue_capacity, model_path, targets, face_recognition_threshold, kill_flag=None):
         self.input_queue = input_queue
-        self.preprocess = ArcFaceResnet100Preprocess(input_queue, queue_capacity)
-        self.model = ArcFaceResnet100Model(self.preprocess.output_queue, queue_capacity, model_path)
-        self.postprocess = ArcFaceResnet100Postprocess(self.model.output_queue,
-                                                       queue_capacity, targets, face_recognition_threshold)
+        self.preprocess = ArcFaceResnet100Preprocess(input_queue, queue_capacity, kill_flag=kill_flag)
+        self.model = ArcFaceResnet100Model(self.preprocess.output_queue, queue_capacity, model_path,
+                                           kill_flag=kill_flag)
+        self.postprocess = ArcFaceResnet100Postprocess(self.model.output_queue, queue_capacity, targets,
+                                                       face_recognition_threshold, kill_flag=kill_flag)
         self.output_queue = self.postprocess.output_queue
 
     def start(self):
@@ -22,7 +23,7 @@ class ArcFaceResnet100:
         return self
 
     def __next__(self):
-        return self.output_queue.get()
+        return self.output_queue.get(timeout=10)
 
     def infer_synchronous(self, x, get_only_embedding=False):
         if get_only_embedding:

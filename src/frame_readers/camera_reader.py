@@ -14,7 +14,7 @@ class CameraReader:
     def __next__(self):
         return self.get()
 
-    def get(self):
+    def get(self, timeout=None):
         ret, frame = self.cap.read()
         while not ret:
             ret, frame = self.cap.read()
