@@ -33,7 +33,7 @@ def main():
         pass
 
     kill_flag.set()
-    print("Waiting for processes to finish...")
+    print("shutting down: main")
     time.sleep(3)
 
 
