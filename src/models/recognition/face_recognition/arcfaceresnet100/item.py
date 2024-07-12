@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 import numpy as np
 
@@ -16,4 +17,4 @@ class ArcFaceResnet100Item:
     similarities: np.ndarray = None
     highest_target_similarity_index: int = None
     is_above_similarity_threshold: float = None
-    matched_names: bool = None
+    matched_names: List[str] = None
