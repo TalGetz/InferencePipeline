@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import tqdm
 
+from src import config
 from src.frame_readers.camera_reader_process import CameraReaderProcess
 from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.models.detection.face_detection.yolov8nface.yolov8nface import YOLOv8nFace
@@ -27,10 +28,13 @@ def get_faces(item: YOLOv8nFaceItem):
 
 def main():
     kill_flag = multiprocessing.Event()
-    try:
+    if config.DEBUG:
         run(kill_flag)
-    except:
-        pass
+    else:
+        try:
+            run(kill_flag)
+        except:
+            pass
 
     kill_flag.set()
     print("shutting down: main")
@@ -52,7 +56,7 @@ def run(kill_flag):
                                           iou_threshold=args.nmsThreshold)
 
     target_names = ["tal", "geva"]
-    target_images = [cv2.imread(f"data/face_images/{name}.png") for name in target_names]
+    target_images = [cv2.imread(f"./data/face_images/{name}.png") for name in target_names]
     targets = []
     for name, image in zip(target_names, target_images):
         item = yolov8nface_main_thread.infer_synchronous(image)
