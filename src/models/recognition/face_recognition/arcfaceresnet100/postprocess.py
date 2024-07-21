@@ -11,6 +11,8 @@ class ArcFaceResnet100Postprocess(TProcess):
         if len(self.targets) > 0 and self.targets[0].face_embedding_batch is not None:
             self.target_embeddings = np.stack([t.face_embedding_batch[0] for t in self.targets]) if len(
                 self.targets) > 0 else np.ndarray((0, 512))
+        else:
+            self.target_embeddings = np.ndarray((0, 512))
         self.face_recognition_threshold = face_recognition_threshold
 
     def overridable_infer(self, item: ArcFaceResnet100Item):
