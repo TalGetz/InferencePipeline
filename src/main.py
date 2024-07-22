@@ -1,6 +1,9 @@
 import argparse
 import multiprocessing
+import os
+import multiprocessing
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -49,14 +52,17 @@ def run(kill_flag):
                         help="onnx filepath")
     parser.add_argument('--confThreshold', default=0.65, type=float, help='class confidence')
     parser.add_argument('--nmsThreshold', default=0.5, type=float, help='nms iou thresh')
+    parser.add_argument("--targetsFolderPath", default="data/target_face_images/", type=str)
     args = parser.parse_args()
 
     camera_reader_process = CameraReaderProcess(kill_flag=kill_flag).start()
     yolov8nface_main_thread = YOLOv8nFace(0, 1, args.modelpath, conf_threshold=args.confThreshold,
                                           iou_threshold=args.nmsThreshold)
 
-    target_names = ["tal", "geva"]
-    target_images = [cv2.imread(f"./data/face_images/{name}.png") for name in target_names]
+    target_file_names = os.listdir(args.targetsFolderPath)
+
+    target_names = [x[:-4] for x in target_file_names if x.endswith(".jpg") or x.endswith(".png")]
+    target_images = [cv2.imread(str(Path(args.targetsFolderPath) / file_name)) for file_name in target_file_names]
     targets = []
     for name, image in zip(target_names, target_images):
         item = yolov8nface_main_thread.infer_synchronous(image)
