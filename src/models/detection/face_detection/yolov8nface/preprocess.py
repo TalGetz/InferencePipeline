@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
+from src.models.detection.item import DetectionItem
 from src.processes.t_process import TProcess
 from src.utils.stopwatch import StopWatch
 
@@ -15,7 +15,7 @@ class YOLOv8nFacePreprocess(TProcess):
     def overridable_infer(self, frame: np.ndarray):
         with StopWatch() as sw:
             blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
-            item = YOLOv8nFaceItem(frame)
+            item = DetectionItem(frame)
             item.blob = blob
             item.pad_h = pad_h
             item.pad_w = pad_w

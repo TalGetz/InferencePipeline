@@ -23,7 +23,7 @@ class ArcFaceResnet100:
         return self
 
     def __next__(self):
-        return self.output_queue.get(timeout=30)
+        return self.output_queue.get()
 
     def infer_synchronous(self, x, get_only_embedding=False):
         if get_only_embedding:

@@ -29,9 +29,9 @@ class YOLOv8nFacePostprocess(TProcess):
         with StopWatch() as sw:
             mlvl_bboxes, confidences, classIds, landmarks = self.postprocess(item.outputs, item.scale_h, item.scale_w,
                                                                              item.pad_h, item.pad_w)
-            item.det_bboxes = mlvl_bboxes
-            item.det_conf = confidences
-            item.det_classid = classIds
+            item.detection_bboxes = mlvl_bboxes
+            item.detection_confidences = confidences
+            item.detection_class_id = classIds
             item.landmarks = landmarks
         item.postprocess_time = sw.get_time_in_seconds()
         return [item]

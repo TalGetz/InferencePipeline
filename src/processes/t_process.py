@@ -26,7 +26,7 @@ class TProcess(abc.ABC):
         try:
             self._repeatable_init_in_process()
             while self.kill_flag is None or not self.kill_flag.is_set():
-                input = self._input_queue.get(timeout=30)
+                input = self._input_queue.get()
                 outputs = self.infer(input)
                 for output in outputs:
                     self._output_queue.put(output)

@@ -54,22 +54,17 @@ def run(kill_flag):
                                           iou_threshold=args.nmsThreshold)
 
     target_file_names = os.listdir(args.targetsFolderPath)
-
     target_names = [x[:-4] for x in target_file_names if x.endswith(".jpg") or x.endswith(".png")]
     target_images = [cv2.imread(str(Path(args.targetsFolderPath) / file_name)) for file_name in target_file_names]
     targets = []
     for name, image in zip(target_names, target_images):
         item = yolov8nface_main_thread.infer_synchronous(image)
-        target = ArcFaceResnet100Target(
-            image,
-            item.landmarks,
-            item.det_bboxes,
-            name=name
-        )
-        targets.append(target)
+        item.name = name
+        targets.append(item)
 
-    arcfaceresnet100_main_thread = ArcFaceResnet100(0, "weights/arcfaceresnet100-8.trt", targets,
+    arcfaceresnet100_main_thread = ArcFaceResnet100(0, "weights/arcfaceresnet100-8.trt", [],
                                                     0.45)
+
     for target in targets:
         tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target, get_only_embedding=True)
         target.aligned_face_batch = tmp_target.aligned_face_batch
@@ -86,7 +81,7 @@ def run(kill_flag):
         for i, name in enumerate(item.matched_names):
             dstimg = cv2.resize(item.aligned_face_batch[i].transpose(1, 2, 0).astype(np.uint8), (300, 300))
             add_text(dstimg, name)
-            stacked_images.append((dstimg, item.bbox_batch[i]))
+            stacked_images.append((dstimg, item.detection_bboxes[i]))
         stacked_images = sorted(stacked_images, key=lambda x: -(x[1][2] * 0.5 + x[1][0] * 0.5))
         stacked_images = [x[0] for x in stacked_images]
         if stacked_images:

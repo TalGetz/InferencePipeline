@@ -3,12 +3,12 @@ from typing import List
 
 import numpy as np
 
+from src.models.detection.item import DetectionItem
+
 
 @dataclass
-class ArcFaceResnet100Item:
-    frame: np.ndarray
-    landmarks_batch: np.ndarray
-    bbox_batch: np.ndarray
+class ArcFaceResnet100Item(DetectionItem):
+    frame: np.ndarray = None
 
     aligned_face_batch: np.ndarray = None
 
