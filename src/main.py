@@ -11,22 +11,10 @@ import tqdm
 
 from src import config
 from src.frame_readers.camera_reader_process import CameraReaderProcess
-from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.models.detection.face_detection.yolov8nface.yolov8nface import YOLOv8nFace
 from src.models.recognition.face_recognition.arcfaceresnet100.arcfaceresnet100 import ArcFaceResnet100
 from src.models.recognition.face_recognition.arcfaceresnet100.item import ArcFaceResnet100Item
 from src.models.recognition.face_recognition.arcfaceresnet100.target import ArcFaceResnet100Target
-from src.utils.align import align_face_np
-
-
-def get_faces(item: YOLOv8nFaceItem):
-    boxes, scores, classids, kpts = item.det_bboxes, item.det_conf, item.det_classid, item.landmarks
-    faces = []
-    for kpt, box in zip(kpts, boxes):
-        dstimg = align_face_np(item.frame, kpt)
-        middle = box[0] + box[2] // 2, box[1] + box[3] // 2
-        faces.append((dstimg.transpose(2, 0, 1), middle))
-    return faces
 
 
 def main():

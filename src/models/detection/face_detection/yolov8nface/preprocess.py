@@ -3,6 +3,7 @@ import numpy as np
 
 from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.processes.t_process import TProcess
+from src.utils.stopwatch import StopWatch
 
 
 class YOLOv8nFacePreprocess(TProcess):
@@ -12,13 +13,15 @@ class YOLOv8nFacePreprocess(TProcess):
         super().__init__(input_queue, kill_flag=kill_flag)
 
     def overridable_infer(self, frame: np.ndarray):
-        blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
-        item = YOLOv8nFaceItem(frame)
-        item.blob = blob
-        item.pad_h = pad_h
-        item.pad_w = pad_w
-        item.scale_h = scale_h
-        item.scale_w = scale_w
+        with StopWatch() as sw:
+            blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)
+            item = YOLOv8nFaceItem(frame)
+            item.blob = blob
+            item.pad_h = pad_h
+            item.pad_w = pad_w
+            item.scale_h = scale_h
+            item.scale_w = scale_w
+        item.preprocess_time = sw.get_time_in_seconds()
         return [item]
 
     def preprocess(self, frame):

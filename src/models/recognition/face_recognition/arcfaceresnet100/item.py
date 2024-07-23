@@ -19,4 +19,6 @@ class ArcFaceResnet100Item:
     is_above_similarity_threshold: float = None
     matched_names: List[str] = None
 
+    preprocess_time: float = None
     model_time: float = None
+    postprocess_time: float = None
