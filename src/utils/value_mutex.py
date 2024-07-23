@@ -24,7 +24,7 @@ class ValueMutex:
             self.queue.put(value)
             self.is_full.set()
 
-    def get(self, *args, **kwargs):
+    def get(self):
         self.is_full.wait()
         self.not_trying_to_get.clear()
         with self.lock:
