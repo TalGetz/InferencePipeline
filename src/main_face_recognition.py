@@ -52,8 +52,7 @@ def run(kill_flag, targets_folder_path, detection_model_path, recognition_model_
     for wide_image in wide_image_generator(kill_flag, targets_folder_path, detection_model_path, recognition_model_path,
                                            detection_confidence_threshold, detection_nms_threshold,
                                            face_recognition_threshold):
-        if wide_image is not None:
-            cv2.imshow('Wide Image', wide_image)
+        cv2.imshow('Wide Image', wide_image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -74,7 +73,8 @@ def wide_image_generator(kill_flag, targets_folder_path, detection_model_path, r
 
     for item in tqdm.tqdm(arcfaceresnet100):
         wide_image = create_merged_aligned_image(item)
-        yield wide_image
+        if wide_image is not None:
+            yield wide_image
 
 
 def gather_targets(targets_folder_path, detection_model_path, recognition_model_path,
