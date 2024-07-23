@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.models.recognition.face_recognition.arcfaceresnet100.item import FaceRecognitionItem
+from src.models.recognition.face_recognition.item import FaceRecognitionItem
 from src.processes.t_process import TProcess
 from src.utils.stopwatch import StopWatch
 

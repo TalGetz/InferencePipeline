@@ -13,7 +13,7 @@ from src import config
 from src.frame_readers.camera_reader_process import CameraReaderProcess
 from src.models.detection.face_detection.yolov8nface.yolov8nface import YOLOv8nFace
 from src.models.recognition.face_recognition.arcfaceresnet100.arcfaceresnet100 import ArcFaceResnet100
-from src.models.recognition.face_recognition.arcfaceresnet100.item import FaceRecognitionItem
+from src.models.recognition.face_recognition.item import FaceRecognitionItem
 
 
 def main():
@@ -67,7 +67,7 @@ def run(kill_flag):
         tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target, get_only_embedding=True)
         target.aligned_face_batch = tmp_target.aligned_face_batch
         target.face_embedding_batch = tmp_target.face_embedding_batch
-        item.name = name
+        target.name = name
 
     yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, args.modelpath, conf_threshold=args.confThreshold,
                               iou_threshold=args.nmsThreshold, kill_flag=kill_flag).start()
