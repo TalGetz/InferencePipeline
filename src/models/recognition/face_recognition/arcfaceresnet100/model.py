@@ -27,5 +27,5 @@ class ArcFaceResnet100Model(TProcess):
                 item.face_embedding_batch = np.stack(embeddings)
             else:
                 item.face_embedding_batch = np.ndarray((0, 512))
-        item.model_time = sw.get_time_in_seconds()
+        item.face_recognition_model_time = sw.get_time_in_seconds()
         return [item]

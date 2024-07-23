@@ -8,8 +8,6 @@ from src.models.detection.item import DetectionItem
 
 @dataclass
 class ArcFaceResnet100Item(DetectionItem):
-    frame: np.ndarray = None
-
     aligned_face_batch: np.ndarray = None
 
     face_embedding_batch: np.ndarray = None
@@ -19,6 +17,6 @@ class ArcFaceResnet100Item(DetectionItem):
     is_above_similarity_threshold: float = None
     matched_names: List[str] = None
 
-    preprocess_time: float = None
-    model_time: float = None
-    postprocess_time: float = None
+    face_recognition_preprocess_time: float = None
+    face_recognition_model_time: float = None
+    face_recognition_postprocess_time: float = None

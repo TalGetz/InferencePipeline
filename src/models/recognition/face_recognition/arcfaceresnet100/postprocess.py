@@ -35,5 +35,5 @@ class ArcFaceResnet100Postprocess(TProcess):
                     item.matched_names.append(self.targets[item.highest_target_similarity_index[index]].name)
                 else:
                     item.matched_names.append("")
-        item.postprocess_time = sw.get_time_in_seconds()
+        item.face_recognition_postprocess_time = sw.get_time_in_seconds()
         return [item]
