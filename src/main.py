@@ -56,14 +56,14 @@ def run(kill_flag):
     target_names = [x[:-4] for x in target_file_names if x.endswith(".jpg") or x.endswith(".png")]
     target_images = [cv2.imread(str(Path(args.targetsFolderPath) / file_name)) for file_name in target_file_names]
     targets = []
-    for name, image in zip(target_names, target_images):
+    for image in target_images:
         item = yolov8nface_main_thread.infer_synchronous(image)
         targets.append(item)
 
     arcfaceresnet100_main_thread = ArcFaceResnet100(0, "weights/arcfaceresnet100-8.trt", [],
                                                     0.45)
 
-    for target in targets:
+    for name, target in zip(target_names, targets):
         tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target, get_only_embedding=True)
         target.aligned_face_batch = tmp_target.aligned_face_batch
         target.face_embedding_batch = tmp_target.face_embedding_batch
@@ -79,7 +79,7 @@ def run(kill_flag):
         stacked_images = []
         for i, name in enumerate(item.matched_names):
             dstimg = cv2.resize(item.aligned_face_batch[i].transpose(1, 2, 0).astype(np.uint8), (300, 300))
-            add_text(dstimg, f"{name}-{item.detection_model_time}-{item.face_recognition_model_time}")
+            add_text(dstimg, f"{name}-{int(item.detection_model_time)}-{int(item.face_recognition_model_time)}")
             stacked_images.append((dstimg, item.detection_bboxes[i]))
         stacked_images = sorted(stacked_images, key=lambda x: -(x[1][2] * 0.5 + x[1][0] * 0.5))
         stacked_images = [x[0] for x in stacked_images]
