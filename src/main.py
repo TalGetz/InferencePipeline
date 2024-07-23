@@ -30,6 +30,11 @@ def get_faces(item: YOLOv8nFaceItem):
 
 
 def main():
+    try:
+        multiprocessing.set_start_method("spawn")
+    except:
+        print("Not using start method spawn, probably on windows.")
+
     kill_flag = multiprocessing.Event()
     if config.DEBUG:
         run(kill_flag)
@@ -47,12 +52,13 @@ def main():
 def run(kill_flag):
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--imgpath', type=str, default='face.jpeg', help="image path")
     parser.add_argument('--modelpath', type=str, default='weights/yolov8n-face.trt',
                         help="onnx filepath")
     parser.add_argument('--confThreshold', default=0.65, type=float, help='class confidence')
     parser.add_argument('--nmsThreshold', default=0.5, type=float, help='nms iou thresh')
     parser.add_argument("--targetsFolderPath", default="data/target_face_images/", type=str)
+    parser.add_argument("--ip", default="data/target_face_images/", type=str)
+    parser.add_argument("--port", default=1, type=int)
     args = parser.parse_args()
 
     camera_reader_process = CameraReaderProcess(kill_flag=kill_flag).start()
@@ -98,12 +104,13 @@ def run(kill_flag):
         stacked_images = [x[0] for x in stacked_images]
         if stacked_images:
             wide_image = np.hstack(stacked_images)  # Stack face_images horizontally
-            cv2.imshow('Wide Image', wide_image)
+            yield wide_image
+            # cv2.imshow('Wide Image', wide_image)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
 
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
 
 def add_text(image, text):
