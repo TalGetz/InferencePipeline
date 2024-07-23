@@ -13,10 +13,10 @@ class ArcFaceResnet100Preprocess(TProcess):
                              dtype=np.float32)
     ArcFacePoints[:, 0] += 8.0
 
-    def __init__(self, input_queue, output_queue_capacity, kill_flag=None):
+    def __init__(self, input_queue, kill_flag=None):
         self.input_height = 640
         self.input_width = 640
-        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
+        super().__init__(input_queue, kill_flag=kill_flag)
 
     def overridable_infer(self, item):
         if isinstance(item, YOLOv8nFaceItem):

@@ -1,7 +1,6 @@
 import argparse
 import multiprocessing
 import os
-import multiprocessing
 import time
 from pathlib import Path
 
@@ -62,7 +61,7 @@ def run(kill_flag):
     args = parser.parse_args()
 
     camera_reader_process = CameraReaderProcess(kill_flag=kill_flag).start()
-    yolov8nface_main_thread = YOLOv8nFace(0, 1, args.modelpath, conf_threshold=args.confThreshold,
+    yolov8nface_main_thread = YOLOv8nFace(0, args.modelpath, conf_threshold=args.confThreshold,
                                           iou_threshold=args.nmsThreshold)
 
     target_file_names = os.listdir(args.targetsFolderPath)
@@ -80,18 +79,17 @@ def run(kill_flag):
         )
         targets.append(target)
 
-    arcfaceresnet100_main_thread = ArcFaceResnet100(0, 1,
-                                                    "weights/arcfaceresnet100-8.trt", targets, 0.45)
+    arcfaceresnet100_main_thread = ArcFaceResnet100(0, "weights/arcfaceresnet100-8.trt", targets,
+                                                    0.45)
     for target in targets:
         tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target, get_only_embedding=True)
         target.aligned_face_batch = tmp_target.aligned_face_batch
         target.face_embedding_batch = tmp_target.face_embedding_batch
 
-    yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, 1, args.modelpath, conf_threshold=args.confThreshold,
+    yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, args.modelpath, conf_threshold=args.confThreshold,
                               iou_threshold=args.nmsThreshold, kill_flag=kill_flag).start()
-    arcfaceresnet100 = ArcFaceResnet100(yolov8nface.output_queue, 1,
-                                        "weights/arcfaceresnet100-8.trt", targets, 0.45,
-                                        kill_flag=kill_flag).start()
+    arcfaceresnet100 = ArcFaceResnet100(yolov8nface.output_queue, "weights/arcfaceresnet100-8.trt", targets,
+                                        0.45, kill_flag=kill_flag).start()
 
     for item in tqdm.tqdm(arcfaceresnet100):
         item: ArcFaceResnet100Item = item
@@ -104,13 +102,13 @@ def run(kill_flag):
         stacked_images = [x[0] for x in stacked_images]
         if stacked_images:
             wide_image = np.hstack(stacked_images)  # Stack face_images horizontally
-            yield wide_image
-            # cv2.imshow('Wide Image', wide_image)
+            # yield wide_image
+            cv2.imshow('Wide Image', wide_image)
 
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    # cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 
 def add_text(image, text):

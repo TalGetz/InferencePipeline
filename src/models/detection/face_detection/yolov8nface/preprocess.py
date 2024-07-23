@@ -6,10 +6,10 @@ from src.processes.t_process import TProcess
 
 
 class YOLOv8nFacePreprocess(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, kill_flag=None):
+    def __init__(self, input_queue, kill_flag=None):
         self.input_height = 640
         self.input_width = 640
-        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
+        super().__init__(input_queue, kill_flag=kill_flag)
 
     def overridable_infer(self, frame: np.ndarray):
         blob, pad_h, pad_w, scale_h, scale_w = self.preprocess(frame)

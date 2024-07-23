@@ -4,12 +4,14 @@ import sys
 import time
 from multiprocessing import Queue
 
+from src.utils.value_mutex import ValueMutex
+
 
 class TProcess(abc.ABC):
-    def __init__(self, input_queue, output_queue_capacity, kill_flag=None):
+    def __init__(self, input_queue, kill_flag=None):
         self.process = multiprocessing.Process(target=self.process_loop, daemon=True)
         self._input_queue: Queue = input_queue
-        self._output_queue: Queue = Queue(output_queue_capacity)
+        self._output_queue: Queue = ValueMutex()
         self._is_initiated = False
         self.kill_flag: multiprocessing.Event = kill_flag
 

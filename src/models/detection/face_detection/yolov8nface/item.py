@@ -20,3 +20,5 @@ class YOLOv8nFaceItem:
     det_conf: np.ndarray = None
     det_classid: np.ndarray = None
     landmarks: np.ndarray = None
+
+    model_time: float = None

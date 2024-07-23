@@ -2,11 +2,12 @@ import numpy as np
 
 from src.models.base_model import BaseModel
 from src.processes.t_process import TProcess
+from src.utils.stopwatch import StopWatch
 
 
 class ArcFaceResnet100Model(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, model_path, kill_flag=None):
-        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
+    def __init__(self, input_queue, model_path, kill_flag=None):
+        super().__init__(input_queue, kill_flag=kill_flag)
         self.model_path = model_path
         self.model: BaseModel = None
 
@@ -16,13 +17,15 @@ class ArcFaceResnet100Model(TProcess):
         ])
 
     def overridable_infer(self, item):
-        embeddings = []
-        for aligned_face in item.aligned_face_batch:
-            [embedding] = self.model.infer([aligned_face])
-            embeddings.append(embedding)
+        with StopWatch() as sw:
+            embeddings = []
+            for aligned_face in item.aligned_face_batch:
+                [embedding] = self.model.infer([aligned_face])
+                embeddings.append(embedding)
 
-        if len(embeddings) > 0:
-            item.face_embedding_batch = np.stack(embeddings)
-        else:
-            item.face_embedding_batch = np.ndarray((0, 512))
+            if len(embeddings) > 0:
+                item.face_embedding_batch = np.stack(embeddings)
+            else:
+                item.face_embedding_batch = np.ndarray((0, 512))
+        item.model_time = sw.get_time_in_seconds()
         return [item]

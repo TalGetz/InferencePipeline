@@ -1,11 +1,12 @@
 from src.models.base_model import BaseModel
 from src.models.detection.face_detection.yolov8nface.item import YOLOv8nFaceItem
 from src.processes.t_process import TProcess
+from src.utils.stopwatch import StopWatch
 
 
 class YOLOv8nFaceModel(TProcess):
-    def __init__(self, input_queue, output_queue_capacity, model_path, kill_flag=None):
-        super().__init__(input_queue, output_queue_capacity, kill_flag=kill_flag)
+    def __init__(self, input_queue, model_path, kill_flag=None):
+        super().__init__(input_queue, kill_flag=kill_flag)
         self.model_path = model_path
         self.model: BaseModel = None
 
@@ -17,7 +18,9 @@ class YOLOv8nFaceModel(TProcess):
         ])
 
     def overridable_infer(self, item: YOLOv8nFaceItem):
-        outputs = self.model.infer([item.blob])
-        outputs = [outputs[1], outputs[2], outputs[0]]
-        item.outputs = outputs
+        with StopWatch() as sw:
+            outputs = self.model.infer([item.blob])
+            outputs = [outputs[1], outputs[2], outputs[0]]
+            item.outputs = outputs
+        item.model_time = sw.get_time_in_seconds()
         return [item]

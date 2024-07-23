@@ -23,7 +23,7 @@ def index():
     return render_template("index.html")
 
 
-def detect_motion(reader):
+def detect_motion():
     try:
         multiprocessing.set_start_method("spawn")
     except:
@@ -83,18 +83,15 @@ def main(ip, port):
     outputFrame = None
     lock = threading.Lock()
 
-    vs = None # VideoStream(src=0).start()
     time.sleep(2.0)
 
-    t = threading.Thread(target=detect_motion, args=(
-        vs,))
+    t = threading.Thread(target=detect_motion)
     t.daemon = True
     t.start()
     # start the flask app
     app.run(host=ip, port=port, debug=True,
             threaded=True, use_reloader=False)
 
-    vs.stop()
 
 
 # check to see if this is the main thread of execution

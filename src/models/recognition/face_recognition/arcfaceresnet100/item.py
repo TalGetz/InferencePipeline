@@ -18,3 +18,5 @@ class ArcFaceResnet100Item:
     highest_target_similarity_index: int = None
     is_above_similarity_threshold: float = None
     matched_names: List[str] = None
+
+    model_time: float = None
