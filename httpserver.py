@@ -60,6 +60,8 @@ def generate():
             # the iteration of the loop
             if outputFrame is None:
                 continue
+
+            outputFrame = cv2.resize(outputFrame, (800,800))
             # encode the frame in JPEG format
             (flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
             # ensure the frame was successfully encoded

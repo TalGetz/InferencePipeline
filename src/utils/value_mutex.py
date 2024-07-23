@@ -1,13 +1,14 @@
-import multiprocessing
+import queue
+import threading
 
 
 class ValueMutex:
     def __init__(self):
-        self.queue = multiprocessing.Queue()
-        self.lock = multiprocessing.Lock()
-        self.not_trying_to_get = multiprocessing.Event()
+        self.queue = queue.Queue()
+        self.lock = threading.Lock()
+        self.not_trying_to_get = threading.Event()
         self.not_trying_to_get.set()
-        self.is_full = multiprocessing.Event()
+        self.is_full = threading.Event()
 
     def __iter__(self):
         return self

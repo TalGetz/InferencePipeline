@@ -1,6 +1,7 @@
 import argparse
 import multiprocessing
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -34,7 +35,7 @@ def main():
     except:
         print("Not using start method spawn, probably on windows.")
 
-    kill_flag = multiprocessing.Event()
+    kill_flag = threading.Event()
     if config.DEBUG:
         run(kill_flag)
     else:

@@ -1,19 +1,18 @@
 import abc
-import multiprocessing
 import sys
 import time
-from multiprocessing import Queue
+from threading import Thread
 
 from src.utils.value_mutex import ValueMutex
 
 
 class TProcess(abc.ABC):
     def __init__(self, input_queue, kill_flag=None):
-        self.process = multiprocessing.Process(target=self.process_loop, daemon=True)
-        self._input_queue: Queue = input_queue
-        self._output_queue: Queue = ValueMutex()
+        self.process = Thread(target=self.process_loop, daemon=True)
+        self._input_queue = input_queue
+        self._output_queue = ValueMutex()
         self._is_initiated = False
-        self.kill_flag: multiprocessing.Event = kill_flag
+        self.kill_flag = kill_flag
 
     def _repeatable_init_in_process(self):
         if not self._is_initiated:
