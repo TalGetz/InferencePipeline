@@ -21,7 +21,7 @@ class YOLOv8nFacePreprocess(TProcess):
             item.pad_w = pad_w
             item.scale_h = scale_h
             item.scale_w = scale_w
-        item.preprocess_time = sw.get_time_in_seconds()
+        item.detection_preprocess_time = sw.get_time_in_seconds()
         return [item]
 
     def preprocess(self, frame):

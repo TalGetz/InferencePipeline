@@ -22,5 +22,5 @@ class YOLOv8nFaceModel(TProcess):
             outputs = self.model.infer([item.blob])
             outputs = [outputs[1], outputs[2], outputs[0]]
             item.outputs = outputs
-        item.model_time = sw.get_time_in_seconds()
+        item.detection_model_time = sw.get_time_in_seconds()
         return [item]

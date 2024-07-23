@@ -21,6 +21,6 @@ class DetectionItem:
     detection_class_id: np.ndarray = None
     landmarks: np.ndarray = None
 
-    preprocess_time: float = None
-    model_time: float = None
-    postprocess_time: float = None
+    detection_preprocess_time: float = None
+    detection_model_time: float = None
+    detection_postprocess_time: float = None

@@ -16,4 +16,4 @@ class StopWatch:
         self.dt = self.end_time - self.start_time
 
     def get_time_in_seconds(self):
-        return self.dt / 1e9
+        return self.dt / 1e6

@@ -33,7 +33,7 @@ class YOLOv8nFacePostprocess(TProcess):
             item.detection_confidences = confidences
             item.detection_class_id = classIds
             item.landmarks = landmarks
-        item.postprocess_time = sw.get_time_in_seconds()
+        item.detection_postprocess_time = sw.get_time_in_seconds()
         return [item]
 
     def postprocess(self, predictions, scale_h, scale_w, pad_h, pad_w):
