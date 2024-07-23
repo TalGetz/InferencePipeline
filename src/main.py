@@ -13,8 +13,7 @@ from src import config
 from src.frame_readers.camera_reader_process import CameraReaderProcess
 from src.models.detection.face_detection.yolov8nface.yolov8nface import YOLOv8nFace
 from src.models.recognition.face_recognition.arcfaceresnet100.arcfaceresnet100 import ArcFaceResnet100
-from src.models.recognition.face_recognition.arcfaceresnet100.item import ArcFaceResnet100Item
-from src.models.recognition.face_recognition.arcfaceresnet100.target import ArcFaceResnet100Target
+from src.models.recognition.face_recognition.arcfaceresnet100.item import FaceRecognitionItem
 
 
 def main():
@@ -59,7 +58,6 @@ def run(kill_flag):
     targets = []
     for name, image in zip(target_names, target_images):
         item = yolov8nface_main_thread.infer_synchronous(image)
-        item.name = name
         targets.append(item)
 
     arcfaceresnet100_main_thread = ArcFaceResnet100(0, "weights/arcfaceresnet100-8.trt", [],
@@ -69,6 +67,7 @@ def run(kill_flag):
         tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target, get_only_embedding=True)
         target.aligned_face_batch = tmp_target.aligned_face_batch
         target.face_embedding_batch = tmp_target.face_embedding_batch
+        item.name = name
 
     yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, args.modelpath, conf_threshold=args.confThreshold,
                               iou_threshold=args.nmsThreshold, kill_flag=kill_flag).start()
@@ -76,7 +75,7 @@ def run(kill_flag):
                                         0.45, kill_flag=kill_flag).start()
 
     for item in tqdm.tqdm(arcfaceresnet100):
-        item: ArcFaceResnet100Item = item
+        item: FaceRecognitionItem = item
         stacked_images = []
         for i, name in enumerate(item.matched_names):
             dstimg = cv2.resize(item.aligned_face_batch[i].transpose(1, 2, 0).astype(np.uint8), (300, 300))

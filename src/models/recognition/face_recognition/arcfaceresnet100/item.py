@@ -7,7 +7,7 @@ from src.models.detection.item import DetectionItem
 
 
 @dataclass
-class ArcFaceResnet100Item(DetectionItem):
+class FaceRecognitionItem(DetectionItem):
     aligned_face_batch: np.ndarray = None
 
     face_embedding_batch: np.ndarray = None

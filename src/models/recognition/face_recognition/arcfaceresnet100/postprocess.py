@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.models.recognition.face_recognition.arcfaceresnet100.item import ArcFaceResnet100Item
+from src.models.recognition.face_recognition.arcfaceresnet100.item import FaceRecognitionItem
 from src.processes.t_process import TProcess
 from src.utils.stopwatch import StopWatch
 
@@ -16,7 +16,7 @@ class ArcFaceResnet100Postprocess(TProcess):
             self.target_embeddings = np.ndarray((0, 512))
         self.face_recognition_threshold = face_recognition_threshold
 
-    def overridable_infer(self, item: ArcFaceResnet100Item):
+    def overridable_infer(self, item: FaceRecognitionItem):
         with StopWatch() as sw:
             normalized_target_embeddings = self.target_embeddings / np.expand_dims(
                 np.linalg.norm(self.target_embeddings, axis=1), axis=1)
