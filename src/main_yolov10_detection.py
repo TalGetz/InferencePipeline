@@ -15,7 +15,7 @@ from src.models.detection.yolo.yolov10.yolov10 import YOLOv10
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--detection_model_path', type=str, default='weights/yolov10m.trt')
+    parser.add_argument('--detection_model_path', type=str, default='weights/yolov10x.trt')
     parser.add_argument('--detection_confidence_threshold', default=0.65, type=float)
     args = parser.parse_args()
 

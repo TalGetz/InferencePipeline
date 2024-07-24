@@ -7,7 +7,11 @@ import cv2
 from flask import Flask, Response
 from flask import render_template
 
-from src.main_face_recognition import wide_image_generator
+from src.main_face_recognition import wide_image_generator as image_gen_face
+from src.main_yolov10_detection import wide_image_generator as image_gen_detect
+
+TYPE = "FACE"
+TYPE = "DETECT"
 
 
 class App(Flask):
@@ -56,14 +60,25 @@ class CurrentFrameUpdaterThread(threading.Thread):
         self.start()
 
     def main_loop(self):
-        for frame in wide_image_generator(kill_flag, "data/target_face_images/", "weights/yolov8n-face.trt",
-                                          "weights/arcfaceresnet100-8.trt", 0.65, 0.5, 0.5):
-            timestamp = datetime.datetime.now()
-            cv2.putText(frame, timestamp.strftime(
-                "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
-            with self.app.current_frame_lock:
-                self.app.current_frame = frame.copy()
+        if TYPE == "FACE":
+            for frame in image_gen_face(kill_flag, "data/target_face_images/", "weights/yolov8n-face.trt",
+                                        "weights/arcfaceresnet100-8.trt", 0.65, 0.5, 0.5):
+                timestamp = datetime.datetime.now()
+                cv2.putText(frame, timestamp.strftime(
+                    "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+                with self.app.current_frame_lock:
+                    self.app.current_frame = frame.copy()
+        elif TYPE == "DETECT":
+            for frame in image_gen_detect(kill_flag, "weights/yolov10x.trt", 0.65, ):
+                timestamp = datetime.datetime.now()
+                cv2.putText(frame, timestamp.strftime(
+                    "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+                with self.app.current_frame_lock:
+                    self.app.current_frame = frame.copy()
+        else:
+            raise NotImplementedError()
 
 
 def main(ip, port):
