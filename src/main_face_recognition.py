@@ -106,7 +106,7 @@ def create_merged_aligned_image(item: FaceRecognitionItem):
     stacked_images = []
     for i, name in enumerate(item.matched_names):
         dstimg = cv2.resize(item.aligned_face_batch[i].transpose(1, 2, 0).astype(np.uint8), (300, 300))
-        add_text(dstimg, f"{name}-{int(item.detection_model_time)}-{int(item.face_recognition_model_time)}")
+        add_text(dstimg, name)
         stacked_images.append((dstimg, item.detection_bboxes[i]))
     stacked_images = sorted(stacked_images, key=lambda x: -(x[1][2] * 0.5 + x[1][0] * 0.5))
     stacked_images = [x[0] for x in stacked_images]

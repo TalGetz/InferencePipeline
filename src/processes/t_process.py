@@ -8,7 +8,7 @@ from src.utils.value_mutex import ValueMutex
 
 class TProcess(abc.ABC):
     def __init__(self, input_queue, kill_flag=None):
-        self.process = Thread(target=self.process_loop, daemon=True)
+        self.thread = Thread(target=self.process_loop, daemon=True)
         self._input_queue = input_queue
         self._output_queue = ValueMutex()
         self._is_initiated = False
@@ -40,11 +40,11 @@ class TProcess(abc.ABC):
         time.sleep(1)
 
     def start(self):
-        self.process.start()
+        self.thread.start()
         return self
 
     def join(self):
-        self.process.join()
+        self.thread.join()
 
     @property
     def output_queue(self):

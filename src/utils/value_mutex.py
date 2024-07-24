@@ -17,17 +17,17 @@ class ValueMutex:
         return self.get()
 
     def put(self, value):
-        self.not_trying_to_get.wait()
+        self.not_trying_to_get.wait(timeout=3600)
         with self.lock:
             while self.queue.qsize() > 0:
-                self.queue.get()
+                self.queue.get(timeout=3600)
             self.queue.put(value)
             self.is_full.set()
 
     def get(self):
-        self.is_full.wait()
+        self.is_full.wait(timeout=3600)
         self.not_trying_to_get.clear()
         with self.lock:
             self.not_trying_to_get.set()
             self.is_full.clear()
-            return self.queue.get()
+            return self.queue.get(timeout=3600)

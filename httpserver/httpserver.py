@@ -1,13 +1,14 @@
 import argparse
 import datetime
-import os
 import threading
+import time
 
 import cv2
 from flask import Flask, Response
 from flask import render_template
 
 from src.main_face_recognition import wide_image_generator
+
 
 class App(Flask):
     def __init__(self, name, template_folder=None):
@@ -55,8 +56,6 @@ class CurrentFrameUpdaterThread(threading.Thread):
         self.start()
 
     def main_loop(self):
-        kill_flag = threading.Event()
-
         for frame in wide_image_generator(kill_flag, "data/target_face_images/", "weights/yolov8n-face.trt",
                                           "weights/arcfaceresnet100-8.trt", 0.65, 0.5, 0.5):
             timestamp = datetime.datetime.now()
@@ -68,14 +67,23 @@ class CurrentFrameUpdaterThread(threading.Thread):
 
 
 def main(ip, port):
-    print(os.getcwd())
-    app = App(__name__, template_folder="./templates/")
-    app.run(host=ip, port=port, debug=True,
-            threaded=True, use_reloader=False)
+    global kill_flag
+    try:
+        app = App(__name__, template_folder="./templates/")
+        app.run(host=ip, port=port, debug=True,
+                threaded=True, use_reloader=False)
+    except:
+        print("error.")
+
+    kill_flag.set()
+    print("shutting down everything")
+    time.sleep(5)
 
 
 # check to see if this is the main thread of execution
 if __name__ == '__main__':
+    kill_flag = threading.Event()
+
     # construct the argument parser and parse command line arguments
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument("--ip", type=str, required=True)
