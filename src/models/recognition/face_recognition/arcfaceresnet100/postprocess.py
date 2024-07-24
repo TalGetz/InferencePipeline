@@ -24,7 +24,7 @@ class ArcFaceResnet100Postprocess(TProcess):
                 np.linalg.norm(item.face_embedding_batch, axis=1), axis=1)
             similarities = (normalized_item_embeddings @ normalized_target_embeddings.T)
             if similarities.shape[-1] == 0:
-                return []
+                return [item]
             item.similarities = similarities
             item.highest_target_similarity_index = np.argmax(similarities, axis=1)
             item.is_above_similarity_threshold = item.similarities[np.arange(item.similarities.shape[0]),

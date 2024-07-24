@@ -25,7 +25,5 @@ class ArcFaceResnet100:
     def __next__(self):
         return self.output_queue.get()
 
-    def infer_synchronous(self, x, get_only_embedding=False):
-        if get_only_embedding:
-            return self.model.infer(self.preprocess.infer(x)[0])[0]
+    def infer_synchronous(self, x):
         return self.postprocess.infer(self.model.infer(self.preprocess.infer(x)[0])[0])[0]

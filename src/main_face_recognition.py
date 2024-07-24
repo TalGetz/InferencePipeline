@@ -94,7 +94,7 @@ def gather_targets(targets_folder_path, detection_model_path, recognition_model_
                                                     0.45)
 
     for name, target in zip(target_names, targets):
-        tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target, get_only_embedding=True)
+        tmp_target = arcfaceresnet100_main_thread.infer_synchronous(target)
         target.aligned_face_batch = tmp_target.aligned_face_batch
         target.face_embedding_batch = tmp_target.face_embedding_batch
         target.name = name
