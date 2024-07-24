@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import os
 import threading
 
 import cv2
@@ -10,8 +11,8 @@ from src.main_face_recognition import wide_image_generator
 
 class App(Flask):
     def __init__(self, name, template_folder=None):
-        super().__init__(name, template_folder=template_folder)
-        self.current_frame = threading.Lock()
+        super().__init__(name, template_folder=template_folder, static_folder=template_folder)
+        self.current_frame = None
         self.current_frame_lock = threading.Lock()
         self.add_url_rules()
         self.updater_thread = CurrentFrameUpdaterThread(self)
@@ -19,9 +20,13 @@ class App(Flask):
     def add_url_rules(self):
         self.add_url_rule("/", "index", self.index)
         self.add_url_rule("/video_feed", "video_feed", self.video_feed)
+        self.add_url_rule("/bootstrap.min.css", "bootstrap_min_css", self.bootstrap_min_css)
 
     def index(self):
         return render_template("index.html")
+
+    def bootstrap_min_css(self):
+        return render_template("bootstrap.min.css")
 
     def video_feed(self):
         return Response(self.current_frame_generator(),
@@ -32,8 +37,11 @@ class App(Flask):
             with self.current_frame_lock:
                 if self.current_frame is None:
                     continue
-
-                (flag, encodedImage) = cv2.imencode(".jpg", self.current_frame)
+                try:
+                    (flag, encodedImage) = cv2.imencode(".jpg", self.current_frame)
+                except:
+                    print(self.current_frame)
+                    raise
                 if not flag:
                     continue
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
@@ -60,7 +68,8 @@ class CurrentFrameUpdaterThread(threading.Thread):
 
 
 def main(ip, port):
-    app = App(__name__, template_folder="./")
+    print(os.getcwd())
+    app = App(__name__, template_folder="./templates/")
     app.run(host=ip, port=port, debug=True,
             threaded=True, use_reloader=False)
 

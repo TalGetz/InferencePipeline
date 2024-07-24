@@ -112,7 +112,7 @@ def create_merged_aligned_image(item: FaceRecognitionItem):
     stacked_images = [x[0] for x in stacked_images]
     if stacked_images:
         # Stack face_images vertically
-        return np.vstack(stacked_images)
+        return np.hstack(stacked_images)
     return None
 
 
