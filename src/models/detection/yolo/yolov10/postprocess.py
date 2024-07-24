@@ -8,13 +8,13 @@ class YOLOv10Postprocess(TProcess):
     def __init__(self, input_queue, conf_threshold, kill_flag=None):
         super().__init__(input_queue, kill_flag=kill_flag)
         self.conf_threshold = conf_threshold
-        self.input_height = 640
-        self.input_width = 640
+        self.network_input_height = 640
+        self.network_input_width = 640
 
     def overridable_infer(self, item):
         with StopWatch() as sw:
             bboxes, confidences, classIds = self.postprocess(item.outputs, item.scale_h, item.scale_w,
-                                                                        item.pad_h, item.pad_w)
+                                                             item.pad_h, item.pad_w)
             item.detection_bboxes = bboxes
             item.detection_confidences = confidences
             item.detection_class_id = classIds
@@ -36,11 +36,12 @@ class YOLOv10Postprocess(TProcess):
             x2 = bboxes[..., 2]
             y2 = bboxes[..., 3]
 
-            x1 = np.clip(x1, 0, self.input_width)
-            y1 = np.clip(y1, 0, self.input_height)
-            x2 = np.clip(x2, 0, self.input_width)
-            y2 = np.clip(y2, 0, self.input_height)
+            x1 = np.clip(x1, 0, self.network_input_width - pad_w * 2)
+            y1 = np.clip(y1, 0, self.network_input_height - pad_h * 2)
+            x2 = np.clip(x2, 0, self.network_input_width - pad_w * 2)
+            y2 = np.clip(y2, 0, self.network_input_height - pad_h * 2)
             bboxes = np.stack([x1, y1, x2, y2], axis=-1)
+            bboxes = bboxes.astype(np.int32)
 
             batch_bboxes.append(bboxes)
             batch_scores.append(scores)

@@ -2,10 +2,7 @@ import cv2
 import numpy as np
 import torch
 
-from src.models.base_model import BaseModel
 from src.models.detection.item import DetectionItem
-from src.models.detection.yolo.yolov10.model import YOLOv10Model
-from src.models.detection.yolo.yolov10.postprocess import YOLOv10Postprocess
 from src.processes.t_process import TProcess
 from src.utils.stopwatch import StopWatch
 
@@ -56,10 +53,9 @@ class YOLOv10Preprocess(TProcess):
         new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
         dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
 
-
         if shape[::-1] != new_unpad:  # resize
             image = cv2.resize(image, new_unpad, interpolation=cv2.INTER_LINEAR)
-        top = int(round(dh/2 - 0.1))
+        top = int(round(dh / 2 - 0.1))
         bottom = dh - top
         left = int(round(dw - 0.1))
         right = dw - left
@@ -68,11 +64,3 @@ class YOLOv10Preprocess(TProcess):
         )
 
         return image, top, left, new_unpad[1] / shape[0], new_unpad[0] / shape[1]
-
-if __name__ == '__main__':
-    frame = cv2.imread("clock.png")
-    pre = YOLOv10Preprocess(None)
-    model = YOLOv10Model(None, "weights/yolov10n.trt")
-    post = YOLOv10Postprocess(None, 0.5)
-    im = post.infer(model.infer(pre.infer(frame)[0])[0])[0]
-    print(im)
