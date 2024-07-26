@@ -11,7 +11,7 @@ from src.main_face_recognition import wide_image_generator as image_gen_face
 from src.main_yolov10_detection import wide_image_generator as image_gen_detect
 
 TYPE = "FACE"
-# TYPE = "DETECT"
+TYPE = "DETECT"
 
 
 class App(Flask):

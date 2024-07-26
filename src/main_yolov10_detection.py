@@ -11,6 +11,7 @@ from src.frame_readers.camera_reader_process import CameraReaderProcess
 from src.models.detection.item import DetectionItem
 from src.models.detection.yolo.yolov10.coco_label_names import COCO_LABEL_NAMES_DICT
 from src.models.detection.yolo.yolov10.yolov10 import YOLOv10
+from src.models.multiple_instances_wrapper import MultipleInstancesWrapper
 
 
 def main():
@@ -50,8 +51,9 @@ def run(kill_flag, detection_model_path, detection_confidence_threshold):
 def wide_image_generator(kill_flag, detection_model_path, detection_confidence_threshold):
     camera_reader_process = CameraReaderProcess(kill_flag=kill_flag).start()
 
-    yolov10 = YOLOv10(camera_reader_process.output_queue, model_path=detection_model_path,
-                      conf_threshold=detection_confidence_threshold, kill_flag=kill_flag).start()
+    yolov10 = MultipleInstancesWrapper(YOLOv10, 1, input_queue=camera_reader_process.output_queue,
+                                       model_path=detection_model_path,
+                                       conf_threshold=detection_confidence_threshold, kill_flag=kill_flag).start()
 
     for item in tqdm.tqdm(yolov10):
         image = create_bbox_image(item)
@@ -64,7 +66,7 @@ def create_bbox_image(item: DetectionItem):
     for i, class_ids in enumerate(item.detection_class_id):
         class_name = COCO_LABEL_NAMES_DICT[class_ids + 1]
         x1, y1, x2, y2 = item.detection_bboxes[i]
-        add_text(frame, class_name, (x2+x1)//2, y1)
+        add_text(frame, class_name, (x2 + x1) // 2, y1)
         frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     return frame
