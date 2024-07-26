@@ -4,7 +4,8 @@ import cv2
 class CameraReader:
     def __init__(self, camera_index=0):
         self.camera_index = camera_index
-        self.cap = cv2.VideoCapture(self.camera_index)
+        self.cap = cv2.VideoCapture()
+        self.cap.open(self.camera_index)
         if not self.cap.isOpened():
             raise ValueError(f"Camera with index {camera_index} cannot be opened.")
 

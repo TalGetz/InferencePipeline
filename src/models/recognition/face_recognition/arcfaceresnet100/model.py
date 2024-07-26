@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 
 from src.models.base_model import BaseModel

@@ -66,7 +66,7 @@ def wide_image_generator(kill_flag, targets_folder_path, detection_model_path, r
     targets = gather_targets(targets_folder_path, detection_model_path, recognition_model_path,
                              detection_confidence_threshold, detection_nms_threshold)
 
-    yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, model_path=detection_model_path,
+    yolov8nface = MultipleInstancesWrapper(YOLOv8nFace, 1, input_queue=camera_reader_process.output_queue, model_path=detection_model_path,
                               conf_threshold=detection_confidence_threshold,
                               iou_threshold=detection_nms_threshold, kill_flag=kill_flag).start()
     arcfaceresnet100 = MultipleInstancesWrapper(ArcFaceResnet100, 1, input_queue=yolov8nface.output_queue,

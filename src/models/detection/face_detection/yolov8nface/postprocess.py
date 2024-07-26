@@ -1,4 +1,5 @@
 import math
+import time
 
 import cv2
 import numpy as np
@@ -10,7 +11,7 @@ from src.utils.stopwatch import StopWatch
 
 class YOLOv8nFacePostprocess(ComputeThread):
     def __init__(self, input_queue, conf_threshold, iou_threshold, kill_flag=None, output_queue=None):
-        super().__init__(input_queue, kill_flag=kill_flag)
+        super().__init__(input_queue, kill_flag=kill_flag, output_queue=output_queue)
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold
         self.input_height = 640
