@@ -1,8 +1,8 @@
 from src.frame_readers.camera_reader import CameraReader
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 
 
-class CameraReaderProcess(TProcess):
+class CameraReaderProcess(ComputeThread):
     def __init__(self, camera_index=0, kill_flag=None):
         self.camera_index = camera_index
         super().__init__(None, kill_flag=kill_flag)

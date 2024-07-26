@@ -1,12 +1,12 @@
 import numpy as np
 
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 from src.utils.stopwatch import StopWatch
 
 
-class YOLOv10Postprocess(TProcess):
-    def __init__(self, input_queue, conf_threshold, kill_flag=None):
-        super().__init__(input_queue, kill_flag=kill_flag)
+class YOLOv10Postprocess(ComputeThread):
+    def __init__(self, input_queue, conf_threshold, kill_flag=None, output_queue=None):
+        super().__init__(input_queue, kill_flag=kill_flag, output_queue=output_queue)
         self.conf_threshold = conf_threshold
         self.network_input_height = 640
         self.network_input_width = 640

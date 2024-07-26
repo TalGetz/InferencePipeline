@@ -1,12 +1,12 @@
 from src.models.base_model import BaseModel
 from src.models.detection.item import DetectionItem
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 from src.utils.stopwatch import StopWatch
 
 
-class YOLOv10Model(TProcess):
-    def __init__(self, input_queue, model_path, kill_flag=None):
-        super().__init__(input_queue, kill_flag=kill_flag)
+class YOLOv10Model(ComputeThread):
+    def __init__(self, input_queue, model_path, kill_flag=None, output_queue=None):
+        super().__init__(input_queue, kill_flag=kill_flag, output_queue=output_queue)
         self.model_path = model_path
         self.model: BaseModel = None
 

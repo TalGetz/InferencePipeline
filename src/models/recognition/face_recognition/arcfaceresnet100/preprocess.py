@@ -2,19 +2,19 @@ import cv2
 import numpy as np
 from skimage import transform as trans
 
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 
 
-class ArcFaceResnet100Preprocess(TProcess):
+class ArcFaceResnet100Preprocess(ComputeThread):
     ArcFacePoints = np.array([[30.2946, 51.6963], [65.5318, 51.5014], [48.0252, 71.7366],
                               [33.5493, 92.3655], [62.7299, 92.2041]],
                              dtype=np.float32)
     ArcFacePoints[:, 0] += 8.0
 
-    def __init__(self, input_queue, kill_flag=None):
+    def __init__(self, input_queue, kill_flag=None, output_queue=None):
         self.input_height = 640
         self.input_width = 640
-        super().__init__(input_queue, kill_flag=kill_flag)
+        super().__init__(input_queue, kill_flag=kill_flag, output_queue=output_queue)
 
     def overridable_infer(self, item):
         item.aligned_face_batch = np.array(

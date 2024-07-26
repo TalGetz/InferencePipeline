@@ -4,13 +4,15 @@ from src.models.recognition.face_recognition.arcfaceresnet100.preprocess import 
 
 
 class ArcFaceResnet100:
-    def __init__(self, input_queue, model_path, targets, face_recognition_threshold, kill_flag=None):
+    def __init__(self, input_queue, model_path, targets, face_recognition_threshold, output_queue=None,
+                 kill_flag=None):
         self.input_queue = input_queue
         self.preprocess = ArcFaceResnet100Preprocess(input_queue, kill_flag=kill_flag)
         self.model = ArcFaceResnet100Model(self.preprocess.output_queue, model_path,
                                            kill_flag=kill_flag)
         self.postprocess = ArcFaceResnet100Postprocess(self.model.output_queue, targets,
-                                                       face_recognition_threshold, kill_flag=kill_flag)
+                                                       face_recognition_threshold, kill_flag=kill_flag,
+                                                       output_queue=output_queue)
         self.output_queue = self.postprocess.output_queue
 
     def start(self):
@@ -18,6 +20,11 @@ class ArcFaceResnet100:
         self.model.start()
         self.postprocess.start()
         return self
+
+    def join(self):
+        self.preprocess.join()
+        self.model.join()
+        self.postprocess.join()
 
     def __iter__(self):
         return self

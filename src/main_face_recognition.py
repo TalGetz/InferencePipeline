@@ -12,6 +12,7 @@ import tqdm
 from src import config
 from src.frame_readers.camera_reader_process import CameraReaderProcess
 from src.models.detection.face_detection.yolov8nface.yolov8nface import YOLOv8nFace
+from src.models.multiple_instances_wrapper import MultipleInstancesWrapper
 from src.models.recognition.face_recognition.arcfaceresnet100.arcfaceresnet100 import ArcFaceResnet100
 from src.models.recognition.face_recognition.item import FaceRecognitionItem
 
@@ -68,8 +69,10 @@ def wide_image_generator(kill_flag, targets_folder_path, detection_model_path, r
     yolov8nface = YOLOv8nFace(camera_reader_process.output_queue, model_path=detection_model_path,
                               conf_threshold=detection_confidence_threshold,
                               iou_threshold=detection_nms_threshold, kill_flag=kill_flag).start()
-    arcfaceresnet100 = ArcFaceResnet100(yolov8nface.output_queue, recognition_model_path, targets,
-                                        face_recognition_threshold, kill_flag=kill_flag).start()
+    arcfaceresnet100 = MultipleInstancesWrapper(ArcFaceResnet100, 1, input_queue=yolov8nface.output_queue,
+                                                model_path=recognition_model_path,
+                                                targets=targets, face_recognition_threshold=face_recognition_threshold,
+                                                kill_flag=kill_flag).start()
 
     for item in tqdm.tqdm(arcfaceresnet100):
         wide_image = create_merged_aligned_image(item)

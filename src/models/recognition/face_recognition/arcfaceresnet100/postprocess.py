@@ -1,13 +1,13 @@
 import numpy as np
 
 from src.models.recognition.face_recognition.item import FaceRecognitionItem
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 from src.utils.stopwatch import StopWatch
 
 
-class ArcFaceResnet100Postprocess(TProcess):
-    def __init__(self, input_queue, targets, face_recognition_threshold, kill_flag=None):
-        super().__init__(input_queue, kill_flag=kill_flag)
+class ArcFaceResnet100Postprocess(ComputeThread):
+    def __init__(self, input_queue, targets, face_recognition_threshold, kill_flag=None, output_queue=None):
+        super().__init__(input_queue, kill_flag=kill_flag, output_queue=output_queue)
         self.targets = targets
         if len(self.targets) > 0 and self.targets[0].face_embedding_batch is not None:
             self.target_embeddings = np.stack([t.face_embedding_batch[0] for t in self.targets]) if len(

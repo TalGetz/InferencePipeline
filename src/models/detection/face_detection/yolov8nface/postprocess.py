@@ -3,13 +3,13 @@ import math
 import cv2
 import numpy as np
 
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 from src.utils.softmax import softmax
 from src.utils.stopwatch import StopWatch
 
 
-class YOLOv8nFacePostprocess(TProcess):
-    def __init__(self, input_queue, conf_threshold, iou_threshold, kill_flag=None):
+class YOLOv8nFacePostprocess(ComputeThread):
+    def __init__(self, input_queue, conf_threshold, iou_threshold, kill_flag=None, output_queue=None):
         super().__init__(input_queue, kill_flag=kill_flag)
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold

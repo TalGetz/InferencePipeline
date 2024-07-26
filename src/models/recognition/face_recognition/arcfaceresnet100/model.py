@@ -1,13 +1,13 @@
 import numpy as np
 
 from src.models.base_model import BaseModel
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 from src.utils.stopwatch import StopWatch
 
 
-class ArcFaceResnet100Model(TProcess):
-    def __init__(self, input_queue, model_path, kill_flag=None):
-        super().__init__(input_queue, kill_flag=kill_flag)
+class ArcFaceResnet100Model(ComputeThread):
+    def __init__(self, input_queue, model_path, kill_flag=None, output_queue=None):
+        super().__init__(input_queue, kill_flag=kill_flag, output_queue=output_queue)
         self.model_path = model_path
         self.model: BaseModel = None
 

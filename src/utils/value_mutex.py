@@ -14,9 +14,13 @@ class ValueMutex:
         return self
 
     def __next__(self):
-        return self.get()
+        value = None
+        while value is None:
+            value = self.get()
+        return value
 
     def put(self, value):
+        # todo: rewrite with count and a single notify using a condition variable instead of "not_trying_to_get"
         self.not_trying_to_get.wait(timeout=3600)
         with self.lock:
             while self.queue.qsize() > 0:
@@ -25,9 +29,12 @@ class ValueMutex:
             self.is_full.set()
 
     def get(self):
+        # todo: rewrite with count and a single notify using a condition variable instead of "not_trying_to_get"
         self.is_full.wait(timeout=3600)
         self.not_trying_to_get.clear()
         with self.lock:
             self.not_trying_to_get.set()
+            if not self.is_full.is_set():
+                return None
             self.is_full.clear()
             return self.queue.get(timeout=3600)

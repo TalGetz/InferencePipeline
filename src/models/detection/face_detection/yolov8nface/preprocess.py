@@ -2,12 +2,12 @@ import cv2
 import numpy as np
 
 from src.models.detection.item import DetectionItem
-from src.processes.t_process import TProcess
+from src.processes.compute_thread import ComputeThread
 from src.utils.stopwatch import StopWatch
 
 
-class YOLOv8nFacePreprocess(TProcess):
-    def __init__(self, input_queue, kill_flag=None):
+class YOLOv8nFacePreprocess(ComputeThread):
+    def __init__(self, input_queue, kill_flag=None, output_queue=None):
         self.input_height = 640
         self.input_width = 640
         super().__init__(input_queue, kill_flag=kill_flag)
