@@ -3,11 +3,13 @@ import multiprocessing
 import os
 import threading
 import time
+from collections import defaultdict
 from pathlib import Path
 
 import cv2
 import numpy as np
 import tqdm
+from playsound import playsound
 
 from src import config
 from src.frame_readers.camera_reader_process import CameraReaderProcess
@@ -16,6 +18,17 @@ from src.models.multiple_instances_wrapper import MultipleInstancesWrapper
 from src.models.recognition.face_recognition.arcfaceresnet100.arcfaceresnet100 import ArcFaceResnet100
 from src.models.recognition.face_recognition.item import FaceRecognitionItem
 
+played_sounds = defaultdict(lambda: False)
+sound_lock = threading.Lock()
+
+def play_sound(name):
+    global played_sounds, sound_lock
+    if not played_sounds[name]:
+        played_sounds[name] = True
+        with sound_lock:
+            playsound(f"data/sounds/{name}.mp3")
+    else:
+        print(f"Already played sound {name} before, skipping...")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -23,7 +36,7 @@ def main():
     parser.add_argument('--recognition_model_path', type=str, default='weights/arcfaceresnet100-8.trt')
     parser.add_argument('--detection_confidence_threshold', default=0.65, type=float)
     parser.add_argument('--detection_nms_threshold', default=0.5, type=float)
-    parser.add_argument('--face_recognition_threshold', default=0.5, type=float)
+    parser.add_argument('--face_recognition_threshold', default=0.35, type=float)
     parser.add_argument("--targets_folder_path", default="data/target_face_images/", type=str)
     args = parser.parse_args()
 
@@ -66,9 +79,10 @@ def wide_image_generator(kill_flag, targets_folder_path, detection_model_path, r
     targets = gather_targets(targets_folder_path, detection_model_path, recognition_model_path,
                              detection_confidence_threshold, detection_nms_threshold)
 
-    yolov8nface = MultipleInstancesWrapper(YOLOv8nFace, 1, input_queue=camera_reader_process.output_queue, model_path=detection_model_path,
-                              conf_threshold=detection_confidence_threshold,
-                              iou_threshold=detection_nms_threshold, kill_flag=kill_flag).start()
+    yolov8nface = MultipleInstancesWrapper(YOLOv8nFace, 1, input_queue=camera_reader_process.output_queue,
+                                           model_path=detection_model_path,
+                                           conf_threshold=detection_confidence_threshold,
+                                           iou_threshold=detection_nms_threshold, kill_flag=kill_flag).start()
     arcfaceresnet100 = MultipleInstancesWrapper(ArcFaceResnet100, 1, input_queue=yolov8nface.output_queue,
                                                 model_path=recognition_model_path,
                                                 targets=targets, face_recognition_threshold=face_recognition_threshold,
@@ -108,6 +122,9 @@ def gather_targets(targets_folder_path, detection_model_path, recognition_model_
 def create_merged_aligned_image(item: FaceRecognitionItem):
     stacked_images = []
     for i, name in enumerate(item.matched_names):
+        if name:
+            # play_sound in new thread:
+            threading.Thread(target=play_sound, args=(name,)).start()
         dstimg = cv2.resize(item.aligned_face_batch[i].transpose(1, 2, 0).astype(np.uint8), (300, 300))
         add_text(dstimg, name)
         stacked_images.append((dstimg, item.detection_bboxes[i]))
